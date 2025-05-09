@@ -12,6 +12,11 @@ dependencies:
   firebase_core: ^3.13.0
   cloud_firestore: ^5.6.7
   firebase_auth: ^5.5.3
+  crypto: ^3.0.6
+  google_fonts: ^6.2.1
+  image_picker: ^1.1.2
+  firebase_storage: ^12.4.5
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
