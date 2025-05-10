@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project/screens/add_vehicle.dart';
+import 'package:project/screens/vehicle_details.dart';
+
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -39,6 +41,84 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
           IconButton(icon: Icon(Icons.notifications), onPressed: () {})
         ],
       ),
+      drawer: Drawer(
+        child: FutureBuilder<DocumentSnapshot>(
+          future: FirebaseFirestore.instance
+              .collection('users')
+              .doc(FirebaseAuth.instance.currentUser!.uid)
+              .get(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final userData = snapshot.data!.data() as Map<String, dynamic>;
+            final userName = userData['name'];
+
+            return ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                UserAccountsDrawerHeader(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE0E7FF),
+                  ),
+                  currentAccountPicture: CircleAvatar(
+                    backgroundColor:  Color(0xFF4F46E5),
+                    child: Icon(Icons.person, color: Colors.white, size: 32),
+                  ),
+                  accountName: Text(
+                    userName,
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  accountEmail: Text(
+                    FirebaseAuth.instance.currentUser!.email ?? '',
+                    style: GoogleFonts.poppins(color: Colors.black54),
+                  ),
+                ),
+
+                ListTile(
+                  leading: const Icon(Icons.notifications),
+                  title: const Text('Notifications'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    //Navigator.pushNamed(context, '/notifications');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.local_offer),
+                  title: const Text('Offers'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    //Navigator.pushNamed(context, '/offers');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.policy),
+                  title: const Text('Insurance Policy Report'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/policy-report');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.car_crash),
+                  title: const Text('Accident Report & Claims'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(context, '/accident-claims');
+                  },
+                ),
+                const Divider(),
+              ],
+            );
+          },
+        ),
+      ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -107,7 +187,12 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                       ),
                       child: GestureDetector(
                         onTap: () {
-                          // Navigate to vehicle details page
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VehicleDetailsPage(vehicleId: vehicle.id),
+                            ),
+                          );
                         },
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
