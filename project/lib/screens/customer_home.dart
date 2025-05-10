@@ -126,7 +126,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search by model or registration number ...',
+                hintText: 'Search for a vehicle ...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
