@@ -35,6 +35,9 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
             color: Colors.black87,
           ),
         ),
+        actions: [
+          IconButton(icon: Icon(Icons.notifications), onPressed: () {})
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -43,7 +46,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search for a Vehicle ...',
+                hintText: 'Search by model or registration number ...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -75,8 +78,18 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                   final registrationNumber =
                       doc['registrationNumber'].toString().toLowerCase();
                   final model = doc['model'].toString().toLowerCase();
+                  final chassisNumber =
+                      doc['chassisNumber'].toString().toLowerCase();
+                  final year =
+                      doc['manufacturingYear'].toString().toLowerCase();
+                  final passengers =
+                      doc['numPassengers'].toString().toLowerCase();
+
                   return registrationNumber.contains(_searchQuery) ||
-                      model.contains(_searchQuery);
+                      model.contains(_searchQuery) ||
+                      chassisNumber.contains(_searchQuery) ||
+                      year.contains(_searchQuery) ||
+                      passengers.contains(_searchQuery);
                 }).toList();
 
                 return ListView.builder(
@@ -119,6 +132,10 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                 style: TextStyle(color: Colors.grey.shade600),
                               ),
                               Text(
+                                'chassis#: ${vehicle['chassisNumber']}',
+                                style: TextStyle(color: Colors.grey.shade600),
+                              ),
+                              Text(
                                 'Year: ${vehicle['manufacturingYear']}',
                                 style: TextStyle(color: Colors.grey.shade600),
                               ),
@@ -126,41 +143,83 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                 'Passengers: ${vehicle['numPassengers']}',
                                 style: TextStyle(color: Colors.grey.shade600),
                               ),
-                              Text(
-                                'Estimated Price: ${vehicle['currentEstimatedPrice']} BD',
-                                style: TextStyle(color: Colors.grey.shade600),
-                              ),
                             ],
                           ),
-                          trailing: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: vehicle['isInsured']
-                                  ? Colors.green.shade100
-                                  : Colors.red.shade100,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: TextButton(
-                              onPressed: () {
-                                _showInsuranceDialog(context, vehicle.id);
-                              },
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: Size(0, 0),
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              child: Text(
-                                vehicle['isInsured']
-                                    ? 'Insured'
-                                    : 'Not Insured',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: vehicle['isInsured']
-                                      ? Colors.green.shade700
-                                      : Colors.red.shade700,
+                          trailing: FutureBuilder<QuerySnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('insurance_requests')
+                                .where('vehicleId', isEqualTo: vehicle.id)
+                                .limit(1)
+                                .get(),
+                            builder: (context, insuranceSnapshot) {
+                              if (insuranceSnapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const SizedBox(
+                                  width: 30,
+                                  height: 30,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                );
+                              }
+
+                              String buttonText;
+                              Color backgroundColor;
+                              Color textColor;
+                              bool isButtonDisabled = false;
+
+                              if (insuranceSnapshot.hasData &&
+                                  insuranceSnapshot.data!.docs.isNotEmpty) {
+                                final request =
+                                    insuranceSnapshot.data!.docs.first;
+                                final status = request['status'];
+
+                                buttonText = status[0].toUpperCase() +
+                                    status.substring(1);
+                                isButtonDisabled = true;
+                                backgroundColor = Colors.blue.shade100;
+                                textColor = Colors.blue.shade700;
+                              } else {
+                                final isInsured = vehicle['isInsured'];
+                                buttonText =
+                                    isInsured ? 'Insured' : 'Not Insured';
+                                backgroundColor = isInsured
+                                    ? Colors.green.shade100
+                                    : Colors.red.shade100;
+                                textColor = isInsured
+                                    ? Colors.green.shade700
+                                    : Colors.red.shade700;
+                                isButtonDisabled = false;
+                              }
+
+                              return Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: backgroundColor,
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                              ),
-                            ),
+                                child: TextButton(
+                                  onPressed: isButtonDisabled
+                                      ? null
+                                      : () {
+                                          _showInsuranceDialog(
+                                              context, vehicle.id);
+                                        },
+                                  style: TextButton.styleFrom(
+                                    padding: EdgeInsets.zero,
+                                    minimumSize: Size(0, 0),
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: Text(
+                                    buttonText,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -201,19 +260,18 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                   const Text(
                       "Please provide the necessary details for insurance:"),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Text('Has the vehicle had an accident?'),
-                      Switch(
-                        value: hasAccident,
-                        onChanged: (bool value) {
-                          setState(() {
-                            hasAccident = value;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
+                  CheckboxListTile(
+                      value: hasAccident,
+                      onChanged: (value) {
+                        setState(
+                          () {
+                            if (value != null) {
+                              hasAccident = value;
+                            }
+                          },
+                        );
+                      },
+                      title: const Text('Has the vehicle had an accident?'))
                 ],
               ),
               actions: [
@@ -236,7 +294,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                         'vehicleId': vehicleId,
                         'userId': userId,
                         'requestType': 'new',
-                        'submittedAt': FieldValue.serverTimestamp(),
+                        'submittedAt': Timestamp.now(),
                         'status': 'pending',
                         'adminResponse': {
                           'offerOptions': [],
@@ -259,6 +317,9 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                       _showStyledSnackbar(
                           context, 'Insurance request submitted!',
                           isError: false);
+                      setState(
+                        () {},
+                      );
                     } catch (e) {
                       _showStyledSnackbar(
                           context, 'Error submitting insurance request: $e',

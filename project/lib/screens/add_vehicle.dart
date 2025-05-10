@@ -149,11 +149,9 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
             'numPassengers': int.tryParse(_passengerCountController.text) ?? 0,
             'driverAge': int.tryParse(_driverAgeController.text) ?? 0,
             'priceWhenNew': double.tryParse(_priceController.text) ?? 0.0,
-            'currentEstimatedPrice': currentEstimatedPrice,
             'hasAccidentBefore': false,
             'photos': imageUrls,
             'isInsured': false,
-            'createdAt': Timestamp.now(),
           });
           Navigator.pop(context);
           _showStyledSnackbar(

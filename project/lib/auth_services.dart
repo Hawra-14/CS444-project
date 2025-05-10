@@ -20,7 +20,6 @@ class AuthService {
         'name': username,
         'email': email,
         'role': 'customer',
-        'createdAt': Timestamp.now(),
       });
       return null;
     } on FirebaseAuthException catch (e) {
