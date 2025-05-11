@@ -53,6 +53,7 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
       final updatedData = {
         for (var key in _controllers.keys) key: _controllers[key]!.text,
       };
+
       await FirebaseFirestore.instance
           .collection('vehicles')
           .doc(widget.vehicleId)
