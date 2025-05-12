@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 import 'request_details_page.dart';
-import 'completed_request_details_page.dart'; // <- You’ll create this
+import 'selected_offer.dart';
 
 class AdminHomeScreen extends StatelessWidget {
   const AdminHomeScreen({super.key});
 
-  void _showSnack(BuildContext context, String msg, bool error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg, style: GoogleFonts.poppins(color: Colors.white)),
-        backgroundColor: error ? Colors.red : Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
+  // void _showSnack(BuildContext context, String msg, bool error) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(msg, style: GoogleFonts.poppins(color: Colors.white)),
+  //       backgroundColor: error ? Colors.red : Colors.green,
+  //       duration: const Duration(seconds: 2),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +106,7 @@ class AdminHomeScreen extends StatelessWidget {
                 final completedRequests = snapshot.data!.docs;
 
                 if (completedRequests.isEmpty) {
-                  return const Center(child: Text("No offers selection requests yet."));
+                  return const Center(child: Text("No requests yet."));
                 }
 
                 return ListView.builder(
@@ -128,7 +128,7 @@ class AdminHomeScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => CompletedRequestDetailsPage(
+                              builder: (_) => SelectedOfferPage(
                                 requestId: req.id,
                                 vehicleId: vehicleId,
                                 requestData: requestData,
