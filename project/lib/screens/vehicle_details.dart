@@ -59,9 +59,7 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
           .doc(widget.vehicleId)
           .update(updatedData);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Vehicle details updated successfully")),
-      );
+      _showStyledSnackbar(context, 'Vehicle details updated successfully!', isError: false);
     }
   }
 
@@ -187,4 +185,44 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
       ),
     );
   }
+  void _showStyledSnackbar(
+    BuildContext context,
+    String message, {
+    bool isError = true,
+    }) {
+      final Color backgroundColor = isError ? Colors.red[400]! : Colors.green[600]!;
+      final Icon icon = Icon(
+        isError ? Icons.error_outline : Icons.check_circle_outline,
+        color: Colors.white,
+        size: 24,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              icon,
+              const SizedBox(width: 12),
+              Text(
+                message,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          showCloseIcon: true,
+          backgroundColor: backgroundColor,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+
 }
