@@ -254,6 +254,10 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
                     return '*Manufacturing year is required';
                   } else if (int.tryParse(value) == null) {
                     return '*Invalid manufacturing year';
+                  } else if (int.tryParse(value) != null) {
+                    if (int.parse(value) > DateTime.now().year) {
+                      return '*Invalid manufacturing year';
+                    }
                   }
                   return null;
                 },

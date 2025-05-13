@@ -66,51 +66,81 @@ class PaymentDetailsPage extends StatelessWidget {
                 ]),
                 const Spacer(),
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.check_circle_outline),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                    backgroundColor: Colors.green[600],
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  label: Text(
-                    "Approve & Mark as Insured",
-                    style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  onPressed: () async {
-                    try {
-                      final vehicleRef = FirebaseFirestore.instance
-                          .collection('vehicles')
-                          .doc(vehicleId);
-                      final requestRef = FirebaseFirestore.instance
-                          .collection('insurance_requests')
-                          .doc(requestId);
+                    icon: const Icon(Icons.check_circle_outline),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      backgroundColor: Colors.green[600],
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    label: Text(
+                      "Approve & Mark as Insured",
+                      style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    onPressed: () async {
+                      try {
+                        final vehicleRef = FirebaseFirestore.instance
+                            .collection('vehicles')
+                            .doc(vehicleId);
+                        final requestRef = FirebaseFirestore.instance
+                            .collection('insurance_requests')
+                            .doc(requestId);
+                        final policiesRef = FirebaseFirestore.instance
+                            .collection('insurance_policies');
 
-                      await vehicleRef.update({'isInsured': true});
-                      await requestRef.update({
-                        'status': 'approved',
-                      });
+                        // Fetch latest vehicle data
+                        final vehicleSnapshot = await vehicleRef.get();
+                        final vehicleData =
+                            vehicleSnapshot.data() as Map<String, dynamic>;
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text(
-                              'Request approved and marked as insured.'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
+                        final now = DateTime.now();
 
-                      Navigator.of(context).pop();
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error: $e'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-                ),
+                        // Step 1: Update vehicle & request
+                        await vehicleRef.update({'isInsured': true});
+                        await requestRef.update({'status': 'approved'});
+
+                        final currentPolicies = await policiesRef
+                            .where('vehicleId', isEqualTo: vehicleId)
+                            .where('isCurrent', isEqualTo: true)
+                            .get();
+
+                        for (var doc in currentPolicies.docs) {
+                          if (doc.exists && doc.id != requestRef.id) {
+                            await doc.reference.update({'isCurrent': false});
+                          }
+                        }
+
+                        // Step 2: Add insurance policy
+                        await policiesRef.add({
+                          'vehicleId': vehicleId,
+                          'registrationNumber':
+                              vehicleData['registrationNumber'],
+                          'model': vehicleData['model'],
+                          'policyValue': requestData['selectedOffer']['price'],
+                          'year': now.year,
+                          'isCurrent': true,
+                          'createdAt': Timestamp.now(),
+                        });
+                        
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text(
+                                'Request approved and policy created.'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+
+                        Navigator.of(context).pop();
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }),
               ],
             ),
           );
