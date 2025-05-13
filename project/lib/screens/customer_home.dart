@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:project/screens/accident_Report.dart';
 import 'package:project/screens/add_vehicle.dart';
 import 'package:project/screens/insurance_Report.dart';
 import 'package:project/screens/offers.dart';
 import 'package:project/screens/vehicle_details.dart';
+import 'package:project/screens/accident_Report.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -80,27 +80,29 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.assignment),
-                  title: const Text('Insurance Policy Reports'),
+                  title: const Text('Insurance Report'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              const InsurancePolicyReportPage()),
+                          builder: (context) => const InsurancePolicyReportPage()),
                     );
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.assignment),
-                  title: const Text('Submit Accident Report'),
+                  leading: const Icon(Icons.car_crash),
+                  title: const Text('Accident Report'),
                   onTap: () {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              const AccidentReportScreen()),
+                        builder: (context) => AccidentReportScreen(
+                          // vehicleId: 'exampleVehicleId',
+                          // vehicleData: {},
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -270,14 +272,15 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                   }
                                   if (status == 'offerSelected' ||
                                       status == 'payed' ||
-                                      status == 'pending') {
+                                      status == 'pending' ||
+                                      status == 'payment_done') {
                                     isButtonDisabled = true;
                                   }
                                   backgroundColor = Colors.blue.shade100;
                                   textColor = Colors.blue.shade700;
                                 }
                               } else {
-                                buttonText = 'Insured';
+                                buttonText = 'Not Insured';
                                 backgroundColor = Colors.red.shade100;
                                 textColor = Colors.red.shade700;
                                 isButtonDisabled = false;
@@ -292,7 +295,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                 child: TextButton(
                                   onPressed: isButtonDisabled
                                       ? null
-                                      : () async {
+                                      : () {
                                           if (status == 'offersSent') {
                                             Navigator.push(
                                                 context,
@@ -321,47 +324,6 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                             }).catchError((error) {
                                               _showStyledSnackbar(context,
                                                   'Failed to update payment: $error');
-                                            });
-                                          } else if (vehicle['isInsured'] ==
-                                              true) {
-                                            final String userId = FirebaseAuth
-                                                .instance.currentUser!.uid;
-
-                                            // Create a new insurance request document with 'renew' as request type
-                                            final insuranceRequestRef =
-                                                FirebaseFirestore.instance
-                                                    .collection(
-                                                        'insurance_requests')
-                                                    .doc(); // Create a new document
-
-                                            final requestData = {
-                                              'vehicleId': vehicle.id,
-                                              'userId': userId,
-                                              'requestType':
-                                                  'renew', 
-                                              'submittedAt': Timestamp.now(),
-                                              'status':
-                                                  'pending',
-                                              'adminResponse': {
-                                                'offerOptions': [],
-                                                'finalPrice': null,
-                                                'validityPeriod': null,
-                                              },
-                                              'selectedOffer': null,
-                                              'paymentConfirmed': false,
-                                            };
-
-                                            await insuranceRequestRef
-                                                .set(requestData)
-                                                .then((_) {
-                                              _showStyledSnackbar(context,
-                                                  'Insurance renewal request submitted!',
-                                                  isError: false);
-                                              setState(() {});
-                                            }).catchError((error) {
-                                              _showStyledSnackbar(context,
-                                                  'Error submitting renewal request: $error',
-                                                  isError: true);
                                             });
                                           } else {
                                             _showInsuranceDialog(
