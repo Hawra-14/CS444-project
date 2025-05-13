@@ -112,7 +112,7 @@ class _OfferSelectionDetailsPageState
                             vehicle['manufacturingYear']?.toString()),
                         _infoRow('Price When New',
                             '${vehicle['priceWhenNew'] ?? 'N/A'} BHD'),
-                        _infoRow('Price When New',
+                        _infoRow('current Estimated Price',
                             '${vehicle['currentEstimatedPrice'] ?? 'N/A'} BHD'),    
                       ]),
                       _buildAvailableOffersSection(),
