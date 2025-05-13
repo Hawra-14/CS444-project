@@ -252,25 +252,36 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                 final request =
                                     insuranceSnapshot.data!.docs.first;
                                 status = request['status'];
-
-                                buttonText = status![0].toUpperCase() +
-                                    status.substring(1);
-                                if (status == 'offerSelected' ||
-                                    status == 'payed') {
-                                  isButtonDisabled = true;
+                                final isInsured = vehicle['isInsured'] == true;
+                                if (isInsured) {
+                                  buttonText = 'Insured';
+                                  backgroundColor = Colors.green.shade100;
+                                  textColor = Colors.green.shade700;
+                                  isButtonDisabled = false;
+                                } else {
+                                  if (status!.contains('_')) {
+                                    var parts = status.split('_');
+                                    parts[0] = parts[0][0].toUpperCase() +
+                                        parts[0].substring(1);
+                                    parts[1] = parts[1][0].toUpperCase() +
+                                        parts[1].substring(1);
+                                    buttonText = parts.join(' ');
+                                  } else {
+                                    buttonText = status[0].toUpperCase() +
+                                        status.substring(1);
+                                  }
+                                  if (status == 'offerSelected' ||
+                                      status == 'payed' ||
+                                      status == 'pending') {
+                                    isButtonDisabled = true;
+                                  }
+                                  backgroundColor = Colors.blue.shade100;
+                                  textColor = Colors.blue.shade700;
                                 }
-                                backgroundColor = Colors.blue.shade100;
-                                textColor = Colors.blue.shade700;
                               } else {
-                                final isInsured = vehicle['isInsured'];
-                                buttonText =
-                                    isInsured ? 'Insured' : 'Not Insured';
-                                backgroundColor = isInsured
-                                    ? Colors.green.shade100
-                                    : Colors.red.shade100;
-                                textColor = isInsured
-                                    ? Colors.green.shade700
-                                    : Colors.red.shade700;
+                                buttonText = 'Insured';
+                                backgroundColor = Colors.red.shade100;
+                                textColor = Colors.red.shade700;
                                 isButtonDisabled = false;
                               }
 
@@ -284,16 +295,39 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                   onPressed: isButtonDisabled
                                       ? null
                                       : () {
-                                        if (status == 'offersSent') {
-                                          Navigator.push(context, MaterialPageRoute(builder: (context) => OfferSelectionPage(vehicleId: vehicle.id)));
-                                        } else if (status == 'awaiting_payment') {
-                                          
-                                        }
-                                        else {
-                                          _showInsuranceDialog(
-                                              context, vehicle.id);
-                                        }
-                                          
+                                          if (status == 'offersSent') {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        OfferSelectionPage(
+                                                            vehicleId:
+                                                                vehicle.id)));
+                                          } else if (status ==
+                                              'awaiting_payment') {
+                                            final requestDoc = insuranceSnapshot
+                                                .data!.docs.first;
+                                            final requestId = requestDoc.id;
+
+                                            FirebaseFirestore.instance
+                                                .collection(
+                                                    'insurance_requests')
+                                                .doc(requestId)
+                                                .update({
+                                              'status': 'payment_done'
+                                            }).then((_) {
+                                              _showStyledSnackbar(context,
+                                                  'Payment confirmed successfully!',
+                                                  isError: false);
+                                              setState(() {});
+                                            }).catchError((error) {
+                                              _showStyledSnackbar(context,
+                                                  'Failed to update payment: $error');
+                                            });
+                                          } else {
+                                            _showInsuranceDialog(
+                                                context, vehicle.id);
+                                          }
                                         },
                                   style: TextButton.styleFrom(
                                     padding: EdgeInsets.zero,

@@ -237,8 +237,6 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // عرض الأزرار فقط إذا كان الطلب في حالة "pending"
-                if (status == 'pending')
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
