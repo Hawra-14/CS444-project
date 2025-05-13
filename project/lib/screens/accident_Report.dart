@@ -62,8 +62,13 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
         child: Column(
           children: [
             // Dropdown for selecting insured vehicle
-            DropdownButton<String>(
-              hint: Text("Select Insured Vehicle"),
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: "Select Insured Vehicle",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               value: _selectedVehicleId,
               onChanged: (String? newValue) {
                 setState(() {
