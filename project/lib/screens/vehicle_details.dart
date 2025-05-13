@@ -86,6 +86,7 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
     if (isLoading) return const Center(child: CircularProgressIndicator());
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
         elevation: 6,
@@ -370,7 +371,7 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
             isError: false);
         Navigator.pop(context);
       } catch (e) {
-        _showStyledSnackbar(context, 'Error deleting vehicle: $e');
+        _showStyledSnackbar(context, 'Error deleting vehicle: $e', isError: true);
       }
     }
   }

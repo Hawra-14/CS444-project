@@ -157,12 +157,12 @@ class _SignupScreenState extends State<SignupScreen> {
                                       builder: (_) => CustomerHomeScreen()),
                                 );
                               } else {
-                                _showStyledSnackbar(context, errorMessage);
+                                _showStyledSnackbar(context, errorMessage, isError: true);
                               }
                             } catch (e) {
                               Navigator.of(context, rootNavigator: true).pop();
                               _showStyledSnackbar(
-                                  context, 'An unexpected error occurred.');
+                                  context, 'An unexpected error occurred.', isError: true);
                               debugPrint('Signup Error: $e');
                             }
                           }

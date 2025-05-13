@@ -77,6 +77,7 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
         elevation: 6,
@@ -264,7 +265,7 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
           isError: false);
       Navigator.pop(context);
     } catch (e) {
-      _showStyledSnackbar(context, 'Error submitting report: $e');
+      _showStyledSnackbar(context, 'Error submitting report: $e', isError: true);
     }
   }
 

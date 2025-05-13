@@ -72,10 +72,10 @@ class _OfferSelectionDetailsPageState extends State<OfferSelectionDetailsPage> {
     try {
       if (approve) {
         await requestRef.update({'status': 'awaiting_payment'});
-        _showStyledSnackbar(context, 'Offer approved and payment requested.');
+        _showStyledSnackbar(context, 'Offer approved and payment requested.', isError: false);
       } else {
         await requestRef.update({'status': 'rejected'});
-        _showStyledSnackbar(context, 'Offer rejected.');
+        _showStyledSnackbar(context, 'Offer rejected.', isError: true);
       }
 
       Navigator.pop(context);
@@ -91,6 +91,7 @@ class _OfferSelectionDetailsPageState extends State<OfferSelectionDetailsPage> {
     final offer = widget.requestData['selectedOffer'] ?? {};
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
         elevation: 6,
@@ -98,7 +99,7 @@ class _OfferSelectionDetailsPageState extends State<OfferSelectionDetailsPage> {
         centerTitle: true,
         toolbarHeight: 70,
         title: Text(
-          "selected Offer Details",
+          "Selected Offer Details",
           style: GoogleFonts.poppins(
             fontSize: 22,
             fontWeight: FontWeight.bold,

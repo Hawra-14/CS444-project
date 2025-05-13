@@ -129,7 +129,7 @@ class OfferSelectionRequestsTab extends StatelessWidget {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('insurance_requests')
-          .where('status', isEqualTo: 'offerSelected')
+          .where('status', isEqualTo: 'offer_selected')
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

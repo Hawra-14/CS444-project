@@ -138,7 +138,7 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
       }
     } catch (e) {
       Navigator.pop(context);
-      _showStyledSnackbar(context, 'Failed to add vehicle: $e');
+      _showStyledSnackbar(context, 'Failed to add vehicle: $e', isError: true);
     }
   }
 

@@ -49,7 +49,7 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
     if (selectedIndex == null ||
         requestDocId == null ||
         adjustedPrice == null) {
-      _showStyledSnackbar(context, 'Please select and adjust an offer');
+      _showStyledSnackbar(context, 'Please select and adjust an offer', isError: true);
       return;
     }
 
@@ -116,9 +116,9 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFE0E7FF),
+        backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
         elevation: 6,
-        shadowColor: Colors.black26,
+        shadowColor: Colors.black38,
         centerTitle: true,
         toolbarHeight: 70,
         title: Text(

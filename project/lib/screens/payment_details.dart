@@ -14,11 +14,8 @@ class PaymentDetailsPage extends StatelessWidget {
     required this.requestData,
   });
 
-  void _showStyledSnackbar(
-    BuildContext context,
-    String message, {
-    bool isError = true,
-  }) {
+  void _showStyledSnackbar(BuildContext context, String message,
+      {bool isError = true}) {
     final Color backgroundColor =
         isError ? Colors.red[400]! : Colors.green[600]!;
     final Icon icon = Icon(
@@ -34,11 +31,13 @@ class PaymentDetailsPage extends StatelessWidget {
           children: [
             icon,
             const SizedBox(width: 12),
-            Text(
-              message,
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -61,13 +60,15 @@ class PaymentDetailsPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: const Color(0xFFE0E7FF),
-        elevation: 1,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        elevation: 4,
+        shadowColor: Colors.black26,
+        centerTitle: true,
+        toolbarHeight: 70,
         title: Text(
-          'Payment Details',
+          "Payment Details",
           style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
         ),
@@ -85,31 +86,35 @@ class PaymentDetailsPage extends StatelessWidget {
           final vehicle = snapshot.data!.data() as Map<String, dynamic>;
 
           return Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 Expanded(
                   child: ListView(
                     children: [
-                      _infoCard(title: "Vehicle Information", children: [
-                        _infoRow("Model", vehicle['model']),
-                        _infoRow("Registration Number",
-                            vehicle['registrationNumber']),
-                        _infoRow("Chassis Number", vehicle['chassisNumber']),
-                        _infoRow("Manufacturing Year",
-                            vehicle['manufacturingYear'].toString()),
-                      ]),
+                      _sectionCard(
+                        "Vehicle Information",
+                        [
+                          _infoRow("Model", vehicle['model']),
+                          _infoRow("Registration Number",
+                              vehicle['registrationNumber']),
+                          _infoRow("Chassis Number", vehicle['chassisNumber']),
+                          _infoRow("Manufacturing Year",
+                              vehicle['manufacturingYear']?.toString()),
+                        ],
+                      ),
                       const SizedBox(height: 20),
-                      _infoCard(title: "Payment Information", children: [
-                        if (requestData['selectedOffer'] != null &&
-                            requestData['selectedOffer']['price'] != null)
+                      _sectionCard(
+                        "Payment Information",
+                        [
                           _infoRow(
                             "Paid Amount",
-                            "${requestData['selectedOffer']['price']} BHD",
-                          )
-                        else
-                          _infoRow("Paid Amount", "N/A"),
-                      ]),
+                            requestData['selectedOffer']?['price'] != null
+                                ? "${requestData['selectedOffer']['price']} BHD"
+                                : "N/A",
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -118,17 +123,16 @@ class PaymentDetailsPage extends StatelessWidget {
                   icon: const Icon(Icons.check_circle_outline,
                       color: Colors.white),
                   style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
                     backgroundColor: const Color(0xFF6366F1),
+                    minimumSize: const Size.fromHeight(50),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   label: Text(
                     "Approve & Mark as Insured",
                     style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
@@ -176,7 +180,7 @@ class PaymentDetailsPage extends StatelessWidget {
                       });
 
                       _showStyledSnackbar(
-                          context, 'Request approved and policy created.');
+                          context, 'Request approved and policy created.', isError: false);
                       Navigator.of(context).pop();
                     } catch (e) {
                       _showStyledSnackbar(context, 'Error: $e', isError: true);
@@ -191,41 +195,53 @@ class PaymentDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _infoCard({required String title, required List<Widget> children}) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+  Widget _sectionCard(String title, List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF4F46E5),
             ),
-            const SizedBox(height: 12),
-            ...children,
-          ],
-        ),
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
       ),
     );
   }
 
   Widget _infoRow(String label, String? value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '$label: ',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[800],
+          SizedBox(
+            width: 150,
+            child: Text(
+              '$label:',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500,
+                color: Colors.blueGrey[700],
+              ),
             ),
           ),
           Expanded(

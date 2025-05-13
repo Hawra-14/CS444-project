@@ -89,6 +89,7 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
         elevation: 6,

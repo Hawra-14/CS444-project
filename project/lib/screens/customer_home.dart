@@ -257,7 +257,8 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                   backgroundColor = Colors.green.shade100;
                                   textColor = Colors.green.shade700;
                                   isButtonDisabled = false;
-                                } else {
+                                }
+                                else {
                                   if (status!.contains('_')) {
                                     var parts = status.split('_');
                                     parts[0] = parts[0][0].toUpperCase() +
@@ -274,8 +275,15 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                       status == 'payment_done' ||  status == 'pending') {
                                     isButtonDisabled = true;
                                   }
-                                  backgroundColor = Colors.blue.shade100;
-                                  textColor = Colors.blue.shade700;
+                                  if (status != 'rejected') {
+                                    backgroundColor = Colors.blue.shade100;
+                                    textColor = Colors.blue.shade700;
+                                  } else {
+                                    backgroundColor = Colors.red.shade100;
+                                    textColor = Colors.red.shade700;
+                                    isButtonDisabled = false;
+                                  }
+                                  
                                 }
                               } else {
                                 buttonText = 'Not Insured';
@@ -294,7 +302,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                   onPressed: isButtonDisabled
                                       ? null
                                       : () {
-                                          if (status == 'offers_sent') {
+                                          if (status == 'offers_sent' || status == 'rejected') {
                                             Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
@@ -321,7 +329,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                               setState(() {});
                                             }).catchError((error) {
                                               _showStyledSnackbar(context,
-                                                  'Failed to update payment: $error');
+                                                  'Failed to update payment: $error', isError: true);
                                             });
                                           } else {
                                             _showInsuranceDialog(

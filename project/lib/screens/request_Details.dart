@@ -88,19 +88,10 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         });
         _showStyledSnackbar(context, 'Request approved and offers sent.',
             isError: false);
-      } else {
-        await ref.update({
-          'status': 'rejected',
-          'adminResponse': {
-            'offerOptions': [],
-            'validityPeriod': null,
-          },
-        });
-        _showStyledSnackbar(context, 'Request rejected.', isError: false);
       }
       Navigator.pop(context);
     } catch (e) {
-      _showStyledSnackbar(context, 'Error: $e');
+      _showStyledSnackbar(context, 'Error: $e', isError: true);
     } finally {
       setState(() => _isProcessing = false);
     }
@@ -213,35 +204,6 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.close, color: Colors.white),
-                        label: _isProcessing
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text("Reject",
-                                style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600)),
-                        onPressed: _isProcessing
-                            ? null
-                            : () => _handleDecision(false, price, year),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 )
               ],
@@ -322,8 +284,6 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         return Colors.orange;
       case 'approved':
         return Colors.green;
-      case 'rejected':
-        return Colors.red;
       case 'offer_selected':
         return Colors.blue;
       default:
