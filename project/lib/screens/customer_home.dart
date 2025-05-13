@@ -252,8 +252,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                 final request =
                                     insuranceSnapshot.data!.docs.first;
                                 status = request['status'];
-                                final isInsured = vehicle['isInsured'] == true;
-                                if (isInsured) {
+                                if (status == 'approved') {
                                   buttonText = 'Insured';
                                   backgroundColor = Colors.green.shade100;
                                   textColor = Colors.green.shade700;
@@ -270,10 +269,9 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                     buttonText = status[0].toUpperCase() +
                                         status.substring(1);
                                   }
-                                  if (status == 'offerSelected' ||
-                                      status == 'payed' ||
-                                      status == 'pending' ||
-                                      status == 'payment_done') {
+                                  if (status == 'offer_selected' ||
+                                      status == 'approved' ||
+                                      status == 'payment_done' ||  status == 'pending') {
                                     isButtonDisabled = true;
                                   }
                                   backgroundColor = Colors.blue.shade100;
@@ -432,7 +430,6 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                         'status': 'pending',
                         'adminResponse': {
                           'offerOptions': [],
-                          'finalPrice': null,
                           'validityPeriod': null,
                         },
                         'selectedOffer': null,

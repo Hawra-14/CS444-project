@@ -64,7 +64,7 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
         .doc(requestDocId)
         .update({
       'selectedOffer': selectedOffer,
-      'status': 'offerSelected',
+      'status': 'offer_selected',
     });
 
     _showSnackbar('Offer submitted successfully', isError: false);

@@ -99,6 +99,7 @@ class PaymentDetailsPage extends StatelessWidget {
                         // Step 1: Update vehicle & request
                         await vehicleRef.update({'isInsured': true});
                         await requestRef.update({'status': 'approved'});
+                        await requestRef.update({'paymentConfirmed': true});
 
                         final currentPolicies = await policiesRef
                             .where('vehicleId', isEqualTo: vehicleId)
