@@ -26,7 +26,8 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
     String message, {
     bool isError = true,
   }) {
-    final Color backgroundColor = isError ? Colors.red[400]! : Colors.green[600]!;
+    final Color backgroundColor =
+        isError ? Colors.red[400]! : Colors.green[600]!;
     final Icon icon = Icon(
       isError ? Icons.error_outline : Icons.check_circle_outline,
       color: Colors.white,
@@ -35,63 +36,60 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: backgroundColor,
-        duration: const Duration(seconds: 3),
         content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             icon,
             const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message, 
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
+            Text(
+              message,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
+        showCloseIcon: true,
+        backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
 
-  Future<void> _handleDecision(bool approve, double priceWhenNew, int manufacturingYear) async {
+  Future<void> _handleDecision(
+      bool approve, double priceWhenNew, int year) async {
     setState(() => _isProcessing = true);
-
-    final requestRef = FirebaseFirestore.instance
+    final ref = FirebaseFirestore.instance
         .collection('insurance_requests')
         .doc(widget.requestId);
-    final currentYear = DateTime.now().year;
+    final int diff = DateTime.now().year - year;
+    double renewalBase = priceWhenNew;
 
-    double renewalBasePrice = priceWhenNew;
-    for (int i = 0; i < currentYear - manufacturingYear; i++) {
-      renewalBasePrice *= 0.9;
+    for (int i = 0; i < diff; i++) {
+      renewalBase *= 0.9;
     }
 
     try {
       if (approve) {
-        List<Map<String, dynamic>> offerOptions = [
-          {'price': (renewalBasePrice * 0.6).round(), 'validity': '6 months'},
-          {'price': (renewalBasePrice).round(), 'validity': '12 months'},
-          {'price': (renewalBasePrice * 1.4).round(), 'validity': '18 months'},
+        List<Map<String, dynamic>> offers = [
+          {'price': (renewalBase * 0.6).round(), 'validity': '6 months'},
+          {'price': renewalBase.round(), 'validity': '12 months'},
+          {'price': (renewalBase * 1.4).round(), 'validity': '18 months'},
         ];
-
-        await requestRef.update({
+        await ref.update({
           'status': 'offers_sent',
-          'adminResponse': {
-            'offerOptions': offerOptions,
-          },
+          'adminResponse': {'offerOptions': offers}
         });
-
-        _showStyledSnackbar(context, 'Request approved and offers sent.', isError: false);
+        _showStyledSnackbar(context, 'Request approved and offers sent.',
+            isError: false);
       } else {
-        await requestRef.update({
+        await ref.update({
           'status': 'rejected',
           'adminResponse': {
             'offerOptions': [],
@@ -100,10 +98,9 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         });
         _showStyledSnackbar(context, 'Request rejected.', isError: false);
       }
-
       Navigator.pop(context);
     } catch (e) {
-      _showStyledSnackbar(context, 'Error: $e', isError: true);
+      _showStyledSnackbar(context, 'Error: $e');
     } finally {
       setState(() => _isProcessing = false);
     }
@@ -112,12 +109,21 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
+        backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
+        elevation: 6,
+        shadowColor: Colors.black38,
+        centerTitle: true,
+        toolbarHeight: 70,
         title: Text(
           'Request Details',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          style: GoogleFonts.poppins(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
         ),
-        backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
@@ -132,25 +138,21 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
             return const Center(child: Text('Vehicle data not found.'));
           }
 
-          final vehicleData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+          final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+          final model = data['model'] ?? 'N/A';
+          final reg = data['registrationNumber'] ?? 'N/A';
+          final chassis = data['chassisNumber'] ?? 'N/A';
+          final price = (data['priceWhenNew'] is num)
+              ? (data['priceWhenNew'] as num).toDouble()
+              : double.tryParse(data['priceWhenNew'].toString()) ?? 0.0;
+          final year =
+              int.tryParse(data['manufacturingYear']?.toString() ?? '') ?? 0;
+          final passengers = data['numPassengers']?.toString() ?? 'N/A';
+          final driverAge = data['driverAge']?.toString() ?? 'N/A';
+          final hadAccident = data['hasAccidentBefore'] == true ? 'Yes' : 'No';
 
-          final model = vehicleData['model'] ?? 'Unknown';
-          final registration = vehicleData['registrationNumber'] ?? 'Unknown';
-          final chassis = vehicleData['chassisNumber'] ?? 'Unknown';
-          final priceRaw = vehicleData['priceWhenNew'];
-          final price = priceRaw is num
-              ? priceRaw.toDouble()
-              : double.tryParse(priceRaw?.toString() ?? '') ?? 0.0;
-          final manufacturingYear = int.tryParse(
-                  vehicleData['manufacturingYear']?.toString() ?? '') ??
-              0;
-          final numPassengers = vehicleData['numPassengers']?.toString() ?? 'N/A';
-          final driverAge = vehicleData['driverAge']?.toString() ?? 'N/A';
-          final hasAccidentBefore =
-              vehicleData['hasAccidentBefore'] == true ? 'Yes' : 'No';
-
-          final userId = widget.requestData['userId'] ?? 'N/A';
           final status = widget.requestData['status'] ?? 'N/A';
+          final userId = widget.requestData['userId'] ?? 'N/A';
 
           return Padding(
             padding: const EdgeInsets.all(16),
@@ -159,152 +161,89 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                 Expanded(
                   child: ListView(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
-                              spreadRadius: 1,
-                              blurRadius: 5,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Vehicle Information',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF4F46E5),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildInfoRow('Model', model),
-                            _buildInfoRow('Registration Number', registration),
-                            _buildInfoRow('Chassis Number', chassis),
-                            _buildInfoRow('Manufacturing Year', manufacturingYear.toString()),
-                            _buildInfoRow('Number of Passengers', numPassengers),
-                            _buildInfoRow('Driver Age', driverAge),
-                            _buildInfoRow('Has Accident Before', hasAccidentBefore),
-                            _buildInfoRow('Price When New', '${price.toStringAsFixed(2)} BHD'),
-                          ],
-                        ),
-                      ),
+                      _buildCard('Vehicle Information', [
+                        _buildInfoRow('Model', model),
+                        _buildInfoRow('Registration Number', reg),
+                        _buildInfoRow('Chassis Number', chassis),
+                        _buildInfoRow('Manufacturing Year', year.toString()),
+                        _buildInfoRow('Number of Passengers', passengers),
+                        _buildInfoRow('Driver Age', driverAge),
+                        _buildInfoRow('Has Accident Before', hadAccident),
+                        _buildInfoRow('Price When New',
+                            '${price.toStringAsFixed(2)} BHD'),
+                      ]),
                       const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
-                              spreadRadius: 1,
-                              blurRadius: 5,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Request Information',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF4F46E5),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            _buildInfoRow('Request ID', widget.requestId),
-                            _buildInfoRow('User ID', userId),
-                            _buildInfoRow('Status', 
-                              status, 
-                              textColor: _getStatusColor(status),
-                              isBold: true
-                            ),
-                          ],
-                        ),
-                      ),
+                      _buildCard('Request Information', [
+                        _buildInfoRow('Request ID', widget.requestId),
+                        _buildInfoRow('User ID', userId),
+                        _buildInfoRow('Status', status,
+                            textColor: _getStatusColor(status), isBold: true),
+                      ]),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.check, color: Colors.white),
-                          label: _isProcessing
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  'Approve',
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600
-                                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.check, color: Colors.white),
+                        label: _isProcessing
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
                                 ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF6366F1),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                              )
+                            : Text("Approve",
+                                style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600)),
+                        onPressed: _isProcessing
+                            ? null
+                            : () => _handleDecision(true, price, year),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4F46E5),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          onPressed: _isProcessing
-                              ? null
-                              : () => _handleDecision(true, price, manufacturingYear),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.close, color: Colors.white),
-                          label: _isProcessing
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  'Reject',
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600
-                                  ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        label: _isProcessing
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
                                 ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                              )
+                            : Text("Reject",
+                                style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w600)),
+                        onPressed: _isProcessing
+                            ? null
+                            : () => _handleDecision(false, price, year),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          onPressed: _isProcessing
-                              ? null
-                              : () => _handleDecision(false, price, manufacturingYear),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                )
               ],
             ),
           );
@@ -312,16 +251,49 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
       ),
     );
   }
-  
-  Widget _buildInfoRow(String label, String value, {Color? textColor, bool isBold = false}) {
-    
+
+  Widget _buildCard(String title, List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF4F46E5),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value,
+      {Color? textColor, bool isBold = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 150,
+            width: 160,
             child: Text(
               '$label:',
               style: GoogleFonts.poppins(
@@ -343,7 +315,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
       ),
     );
   }
-  
+
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -355,7 +327,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
       case 'offer_selected':
         return Colors.blue;
       default:
-        return Colors.black;
+        return Colors.black87;
     }
   }
 }

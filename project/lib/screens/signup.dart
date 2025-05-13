@@ -20,7 +20,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
   bool _obscurePassword = true;
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,178 +39,185 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Let's create your account",
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Let's create your account",
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-            const SizedBox(height: 28),
-            Form(
-              key: _signupFormKey,
-              child: Column(
-                children: [
-                  _buildTextField(
-                    controller: _nameController,
-                    icon: Icons.person,
-                    label: "Name",
-                    hint: "Enter your name",
-                    validator: (value) {
-                      final RegExp nameRegex =
-                          RegExp(r'^[a-zA-Z]{3,10}\s[a-zA-Z]{3,10}(\s[a-zA-Z]{3,10}){0,4}$');
-                      if (value == null || value.isEmpty) {
-                        return '*Name is required';
-                      } else if (!nameRegex.hasMatch(value)) {
-                        return '*Invalid Name';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _emailController,
-                    icon: Icons.email,
-                    label: "Email",
-                    hint: "Enter your email",
-                    validator: (value) {
-                      final RegExp emailRegex =
-                          RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                      if (value == null || value.isEmpty) {
-                        return '*Email is required';
-                      } else if (!emailRegex.hasMatch(value)) {
-                        return '*Invalid email address';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _passwordController,
-                    icon: Icons.lock,
-                    label: "Password",
-                    hint: "Enter your password",
-                    obscureText: _obscurePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: Colors.grey[700],
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '*Password is required';
-                      } else if (value.length < 6) {
-                        return '*Password must be at least 6 characters long';
-                      } else if (!value.contains(RegExp(r'[A-Z]'))) {
-                        return '*Password must contain at least one uppercase letter';
-                      } else if (!value.contains(RegExp(r'[0-9]'))) {
-                        return '*Password must contain at least one number';
-                      } else if (!value
-                          .contains(RegExp(r'[!@#$%^&*(),.?":{}_\-]'))) {
-                        return '*Password must contain at least one special character';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (_signupFormKey.currentState!.validate()) {
-                          final authService = AuthService();
-                          try {
-                            showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (_) => const Center(
-                                  child: CircularProgressIndicator()),
-                            );
-                            final errorMessage = await authService.signUp(
-                              email: _emailController.text.trim(),
-                              password: _passwordController.text,
-                              username: _nameController.text.trim(),
-                            );
-                            Navigator.pop(context);
-                            if (errorMessage == null) {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => CustomerHomeScreen()),
-                              );
-                            } else {
-                              _showStyledSnackbar(context, errorMessage);
-                            }
-                          } catch (e) {
-                            Navigator.pop(context);
-                            _showStyledSnackbar(
-                                context, 'An unexpected error occurred.');
-                            debugPrint('Signup Error: $e');
-                          }
+              const SizedBox(height: 28),
+              Form(
+                key: _signupFormKey,
+                child: Column(
+                  children: [
+                    _buildTextField(
+                      controller: _nameController,
+                      icon: Icons.person,
+                      label: "Name",
+                      hint: "Enter your name",
+                      validator: (value) {
+                        final RegExp nameRegex = RegExp(
+                            r'^[a-zA-Z]{3,10}\s[a-zA-Z]{3,10}(\s[a-zA-Z]{3,10}){0,4}$');
+                        if (value == null || value.isEmpty) {
+                          return '*Name is required';
+                        } else if (!nameRegex.hasMatch(value)) {
+                          return '*Invalid Name';
                         }
+                        return null;
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4F46E5),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        elevation: 3,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: Text(
-                        "Sign Up",
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Already have an account? ",
-                        style: GoogleFonts.poppins(fontSize: 14),
-                      ),
-                      const SizedBox(width: 5),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _emailController,
+                      icon: Icons.email,
+                      label: "Email",
+                      hint: "Enter your email",
+                      validator: (value) {
+                        final RegExp emailRegex =
+                            RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                        if (value == null || value.isEmpty) {
+                          return '*Email is required';
+                        } else if (!emailRegex.hasMatch(value)) {
+                          return '*Invalid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _passwordController,
+                      icon: Icons.lock,
+                      label: "Password",
+                      hint: "Enter your password",
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey[700],
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
                         },
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return '*Password is required';
+                        } else if (value.length < 6) {
+                          return '*Password must be at least 6 characters long';
+                        } else if (!value.contains(RegExp(r'[A-Z]'))) {
+                          return '*Include at least one uppercase letter';
+                        } else if (!value.contains(RegExp(r'[0-9]'))) {
+                          return '*Include at least one number';
+                        } else if (!value
+                            .contains(RegExp(r'[!@#$%^&*(),.?":{}_\-]'))) {
+                          return '*Include at least one special character';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 40),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (_signupFormKey.currentState!.validate()) {
+                            final authService = AuthService();
+                            try {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (_) => const Center(
+                                    child: CircularProgressIndicator()),
+                              );
+                              final errorMessage = await authService.signUp(
+                                email: _emailController.text.trim(),
+                                password: _passwordController.text,
+                                username: _nameController.text.trim(),
+                              );
+                              Navigator.of(context, rootNavigator: true)
+                                  .pop(); // Close loading dialog
+
+                              if (errorMessage == null) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => CustomerHomeScreen()),
+                                );
+                              } else {
+                                _showStyledSnackbar(context, errorMessage);
+                              }
+                            } catch (e) {
+                              Navigator.of(context, rootNavigator: true).pop();
+                              _showStyledSnackbar(
+                                  context, 'An unexpected error occurred.');
+                              debugPrint('Signup Error: $e');
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4F46E5),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                         child: Text(
-                          "Login",
+                          "Sign Up",
                           style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: const Color(0xFF4F46E5),
-                            fontWeight: FontWeight.w600,
-                            decoration: TextDecoration.underline,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Already have an account?",
+                          style: GoogleFonts.poppins(fontSize: 14),
+                        ),
+                        const SizedBox(width: 5),
+                        MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: Text(
+                              "Login",
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: const Color(0xFF4F46E5),
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

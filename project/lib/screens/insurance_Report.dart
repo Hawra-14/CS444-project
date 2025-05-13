@@ -55,16 +55,16 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
   Widget _buildPolicyCard(Map<String, dynamic> data) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
+      elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Registration Number: ${data['registrationNumber']}", style: _titleStyle()),
+            Text("Model: ${data['model']}", style: _titleStyle()),
             const SizedBox(height: 4),
-            Text("Model: ${data['model']}", style: _bodyStyle()),
+            Text("Registration Number: ${data['registrationNumber']}", style: _bodyStyle()),
             Text("Year: ${data['year']}", style: _bodyStyle()),
             Text("Policy Value: ${data['policyValue']} BD", style: _bodyStyle()),
             if (data['isCurrent'] == true)
@@ -82,7 +82,7 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
     );
   }
 
-  // TextStyle helpers
+  // TextStyle helpers for consistent typography
   TextStyle _titleStyle() => GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600);
   TextStyle _bodyStyle() => GoogleFonts.poppins(fontSize: 14, color: Colors.black87);
 
@@ -90,8 +90,19 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Insurance Policy Report', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
-        backgroundColor: Colors.indigo[100],
+        backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
+        elevation: 6,
+        shadowColor: Colors.black38,
+        centerTitle: true,
+        toolbarHeight: 70,
+        title: Text(
+          "Insurance Policy Reports",
+          style: GoogleFonts.poppins(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -115,7 +126,7 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
             ),
             const SizedBox(height: 12),
 
-            // Filter Options
+            // Filter Options (Row layout for chips)
             Row(
               children: [
                 // CRN filter
@@ -134,7 +145,7 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
                 ),
                 const SizedBox(width: 16),
 
-                // Year filter
+                // Year filter (Dropdown)
                 Expanded(
                   child: DropdownButtonFormField<int>(
                     value: _selectedYear,
@@ -171,7 +182,7 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
 
             const SizedBox(height: 16),
 
-            // Results
+            // Results - Displaying the list of policies
             Expanded(
               child: StreamBuilder<List<QueryDocumentSnapshot>>(
                 stream: _buildPolicyStream(),

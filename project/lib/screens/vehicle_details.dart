@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// ... [Keep all imports]
+
 class VehicleDetailsPage extends StatefulWidget {
   final String vehicleId;
 
@@ -25,16 +27,15 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
     'driverAge': TextEditingController(),
     'priceWhenNew': TextEditingController(),
     'currentEstimatedPrice': TextEditingController(),
-    'image': TextEditingController(),
   };
+
+  late double originalCurrentEstimatedPrice;
 
   @override
   void initState() {
     super.initState();
     _fetchVehicleDetails();
   }
-
-  late double originalCurrentEstimatedPrice;
 
   Future<void> _fetchVehicleDetails() async {
     final doc = await FirebaseFirestore.instance
@@ -48,7 +49,6 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
         controller.text = vehicleData[key]?.toString() ?? '';
       });
 
-      // Save the original currentEstimatedPrice as double
       originalCurrentEstimatedPrice =
           double.tryParse(vehicleData['currentEstimatedPrice'].toString()) ??
               0.0;
@@ -79,18 +79,27 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
     super.dispose();
   }
 
+  Widget _verticalSpace([double height = 16]) => SizedBox(height: height);
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
+        elevation: 6,
+        shadowColor: Colors.black38,
+        centerTitle: true,
+        toolbarHeight: 70,
         title: Text(
-          'Vehicle Details',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          "Vehicle Details",
+          style: GoogleFonts.poppins(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
         ),
-        backgroundColor: const Color(0xFFE0E7FF),
-        elevation: 4,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -103,228 +112,110 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
                 icon: Icons.directions_car,
                 label: "Car Model",
                 hint: "e.g. Toyota Camry",
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '*Car model is required';
-                  }
-                  return null;
-                },
+                validator: _requiredValidator("Car model"),
               ),
-              const SizedBox(height: 16),
+              _verticalSpace(),
               _buildTextField(
                 controller: _controllers['chassisNumber']!,
                 icon: Icons.confirmation_number,
                 label: "Chassis Number",
                 hint: "Enter chassis number",
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '*Chassis number is required';
-                  }
-                  return null;
-                },
+                validator: _requiredValidator("Chassis number"),
               ),
-              const SizedBox(height: 16),
+              _verticalSpace(),
               _buildTextField(
                 controller: _controllers['registrationNumber']!,
                 icon: Icons.numbers,
                 label: "Registration Number",
                 hint: "Enter registration number",
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '*Registration number is required';
-                  }
-                  return null;
-                },
+                validator: _requiredValidator("Registration number"),
               ),
-              const SizedBox(height: 16),
+              _verticalSpace(),
               _buildTextField(
                 controller: _controllers['manufacturingYear']!,
                 icon: Icons.calendar_today,
                 label: "Manufacturing Year",
                 hint: "e.g. 2022",
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '*Manufacturing year is required';
-                  } else if (int.tryParse(value) == null) {
-                    return '*Invalid manufacturing year';
+                  if (value == null || value.isEmpty) return '*Required';
+                  final year = int.tryParse(value);
+                  if (year == null || year > DateTime.now().year) {
+                    return '*Invalid year';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              _verticalSpace(),
               _buildTextField(
                 controller: _controllers['numPassengers']!,
                 icon: Icons.event_seat,
                 label: "Number of Passengers",
                 hint: "e.g. 5",
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '*Number of Passengers is required';
-                  } else if (int.tryParse(value) == null) {
-                    return '*Invalid number of Passengers';
-                  } else if (int.tryParse(value) != null) {
-                    if (int.tryParse(value)! > 100) {
-                      return '*Number of passengers should not be more than 10';
-                    }
+                  final count = int.tryParse(value ?? '');
+                  if (count == null || count < 1 || count > 100) {
+                    return '*Enter valid number (1–100)';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              _verticalSpace(),
               _buildTextField(
                 controller: _controllers['driverAge']!,
                 icon: Icons.person_outline,
                 label: "Driver Age",
                 hint: "e.g. 35",
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '*Driver age is required';
-                  } else if (int.tryParse(value) == null) {
-                    return '*Invalid driver age';
+                  final age = int.tryParse(value ?? '');
+                  if (age == null || age < 18 || age > 100) {
+                    return '*Enter valid age (18–100)';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              _verticalSpace(),
               _buildTextField(
                 controller: _controllers['priceWhenNew']!,
                 icon: Icons.attach_money,
-                label: "Car Price (when new)",
+                label: "Car Price (When New)",
                 hint: "e.g. 30000",
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '*Car Price is required';
-                  } else if (double.tryParse(value) == null) {
-                    return '*Invalid car price';
+                  if (value == null || value.isEmpty)
+                    return '*Car price is required';
+                  if (double.tryParse(value) == null) return '*Invalid price';
+                  return null;
+                },
+              ),
+              _verticalSpace(),
+              _buildTextField(
+                controller: _controllers['currentEstimatedPrice']!,
+                icon: Icons.attach_money,
+                label: "Current Estimated Price",
+                hint: "e.g. 25000",
+                validator: (value) {
+                  if (value == null || value.isEmpty)
+                    return '*Estimated price is required';
+                  final newPrice = double.tryParse(value);
+                  if (newPrice == null) return '*Invalid price';
+                  final lowerLimit = originalCurrentEstimatedPrice * 0.9;
+                  final upperLimit = originalCurrentEstimatedPrice * 1.1;
+                  if (newPrice < lowerLimit || newPrice > upperLimit) {
+                    return '*Price must be within ±10% of \$${originalCurrentEstimatedPrice.toStringAsFixed(2)}';
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                  controller: _controllers['currentEstimatedPrice']!,
-                  icon: Icons.attach_money,
-                  label: "Current Estimated Price",
-                  hint: "e.g. 30000",
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return '*Current Estimated Price is required';
-                    }
-
-                    final newPrice = double.tryParse(value);
-                    if (newPrice == null) {
-                      return '*Invalid car price';
-                    }
-
-                    final lowerLimit = originalCurrentEstimatedPrice * 0.9;
-                    final upperLimit = originalCurrentEstimatedPrice * 1.1;
-
-                    if (newPrice < lowerLimit || newPrice > upperLimit) {
-                      return '*New price must be within ±10% of the original estimated price (\$${originalCurrentEstimatedPrice.toStringAsFixed(2)})';
-                    }
-
-                    return null;
-                  }),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _saveChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 24),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'Save Changes',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
+              _verticalSpace(24),
+              _buildButton(
+                label: "Save Changes",
+                color: const Color(0xFF6366F1),
+                onPressed: _saveChanges,
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Delete Vehicle'),
-                        content: const Text(
-                            'Are you sure you want to delete this vehicle?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('No'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Yes, Delete'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color.fromARGB(255, 231, 87, 76),
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm == true) {
-                      try {
-                        final batch = FirebaseFirestore.instance.batch();
-
-                        final vehicleRef = FirebaseFirestore.instance
-                            .collection('vehicles')
-                            .doc(widget.vehicleId);
-
-                        // Delete the vehicle document
-                        batch.delete(vehicleRef);
-
-                        // Helper function to delete related documents by vehicleId
-                        Future<void> deleteRelatedDocuments(
-                            String collectionName) async {
-                          final querySnapshot = await FirebaseFirestore.instance
-                              .collection(collectionName)
-                              .where('vehicleId', isEqualTo: widget.vehicleId)
-                              .get();
-
-                          for (var doc in querySnapshot.docs) {
-                            batch.delete(doc.reference);
-                          }
-                        }
-
-                        // Delete related records in other collections
-                        await deleteRelatedDocuments('insurance_policies');
-                        await deleteRelatedDocuments('accidents');
-                        await deleteRelatedDocuments('insurance_requests');
-
-                        // Commit the batch delete
-                        await batch.commit();
-
-                        _showStyledSnackbar(context,
-                            'Vehicle and related records deleted successfully!',
-                            isError: false);
-
-                        Navigator.pop(context); // Go back to previous screen
-                      } catch (e) {
-                        _showStyledSnackbar(
-                            context, 'Error deleting vehicle: $e');
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color.fromARGB(255, 231, 87, 76),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 24),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('Delete Vehicle',
-                      style: TextStyle(color: Colors.white)),
-                ),
+              _verticalSpace(10),
+              _buildButton(
+                label: "Delete Vehicle",
+                color: const Color.fromARGB(255, 231, 87, 76),
+                onPressed: _confirmDelete,
               ),
             ],
           ),
@@ -338,22 +229,16 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
     required IconData icon,
     required String label,
     required String hint,
-    bool obscureText = false,
-    Widget? suffixIcon,
-    bool readOnly = false,
     required String? Function(String?) validator,
   }) {
     return TextFormField(
       controller: controller,
-      obscureText: obscureText,
-      readOnly: readOnly,
       validator: validator,
       style: GoogleFonts.poppins(),
       decoration: InputDecoration(
         filled: true,
-        fillColor: const Color(0xFFFFFFFF),
+        fillColor: Colors.white,
         prefixIcon: Icon(icon, color: Colors.grey[700]),
-        suffixIcon: suffixIcon,
         labelText: label,
         hintText: hint,
         labelStyle: GoogleFonts.poppins(color: Colors.grey[800]),
@@ -364,6 +249,30 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildButton(
+      {required String label,
+      required Color color,
+      required VoidCallback onPressed}) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+        child: Text(label, style: const TextStyle(color: Colors.white)),
+      ),
+    );
+  }
+
+  String? Function(String?) _requiredValidator(String fieldName) {
+    return (value) =>
+        value == null || value.isEmpty ? '*$fieldName is required' : null;
   }
 
   void _showStyledSnackbar(
@@ -405,5 +314,64 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
         duration: const Duration(seconds: 3),
       ),
     );
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Vehicle'),
+        content: const Text('Are you sure you want to delete this vehicle?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 231, 87, 76),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Yes, Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        final batch = FirebaseFirestore.instance.batch();
+        final vehicleRef = FirebaseFirestore.instance
+            .collection('vehicles')
+            .doc(widget.vehicleId);
+        batch.delete(vehicleRef);
+
+        Future<void> deleteRelated(String collection) async {
+          final snapshot = await FirebaseFirestore.instance
+              .collection(collection)
+              .where('vehicleId', isEqualTo: widget.vehicleId)
+              .get();
+          for (var doc in snapshot.docs) {
+            batch.delete(doc.reference);
+          }
+        }
+
+        await Future.wait([
+          deleteRelated('insurance_policies'),
+          deleteRelated('accidents'),
+          deleteRelated('insurance_requests'),
+        ]);
+
+        await batch.commit();
+
+        _showStyledSnackbar(
+            context, 'Vehicle and related records deleted successfully!',
+            isError: false);
+        Navigator.pop(context);
+      } catch (e) {
+        _showStyledSnackbar(context, 'Error deleting vehicle: $e');
+      }
+    }
   }
 }

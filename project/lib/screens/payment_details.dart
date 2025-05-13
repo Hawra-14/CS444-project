@@ -14,12 +14,55 @@ class PaymentDetailsPage extends StatelessWidget {
     required this.requestData,
   });
 
+  void _showStyledSnackbar(
+    BuildContext context,
+    String message, {
+    bool isError = true,
+  }) {
+    final Color backgroundColor =
+        isError ? Colors.red[400]! : Colors.green[600]!;
+    final Icon icon = Icon(
+      isError ? Icons.error_outline : Icons.check_circle_outline,
+      color: Colors.white,
+      size: 24,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            icon,
+            const SizedBox(width: 12),
+            Text(
+              message,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        showCloseIcon: true,
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: const Color(0xFFE0E7FF),
+        elevation: 1,
+        iconTheme: const IconThemeData(color: Colors.black87),
         title: Text(
           'Payment Details',
           style: GoogleFonts.poppins(
@@ -28,8 +71,6 @@ class PaymentDetailsPage extends StatelessWidget {
             color: Colors.black87,
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.black87),
-        elevation: 4,
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
@@ -37,111 +78,111 @@ class PaymentDetailsPage extends StatelessWidget {
             .doc(vehicleId)
             .snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData)
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
 
           final vehicle = snapshot.data!.data() as Map<String, dynamic>;
 
           return Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _infoCard(title: "Vehicle Information", children: [
-                  _infoRow("Model", vehicle['model']),
-                  _infoRow(
-                      "Registration Number", vehicle['registrationNumber']),
-                  _infoRow("Chassis Number", vehicle['chassisNumber']),
-                  _infoRow("Manufacturing Year",
-                      vehicle['manufacturingYear'].toString()),
-                ]),
-                const SizedBox(height: 20),
-                _infoCard(title: "Payment Information", children: [
-                  if (requestData['selectedOffer'] != null &&
-                      requestData['selectedOffer']['price'] != null)
-                    _infoRow(
-                      "Payed Amount",
-                      "${requestData['selectedOffer']['price']} BD",
-                    ),
-                ]),
-                const Spacer(),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      _infoCard(title: "Vehicle Information", children: [
+                        _infoRow("Model", vehicle['model']),
+                        _infoRow("Registration Number",
+                            vehicle['registrationNumber']),
+                        _infoRow("Chassis Number", vehicle['chassisNumber']),
+                        _infoRow("Manufacturing Year",
+                            vehicle['manufacturingYear'].toString()),
+                      ]),
+                      const SizedBox(height: 20),
+                      _infoCard(title: "Payment Information", children: [
+                        if (requestData['selectedOffer'] != null &&
+                            requestData['selectedOffer']['price'] != null)
+                          _infoRow(
+                            "Paid Amount",
+                            "${requestData['selectedOffer']['price']} BHD",
+                          )
+                        else
+                          _infoRow("Paid Amount", "N/A"),
+                      ]),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
                 ElevatedButton.icon(
-                    icon: const Icon(Icons.check_circle_outline, color: Colors.white),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                      backgroundColor: Color(0xFF6366F1),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                  icon: const Icon(Icons.check_circle_outline,
+                      color: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    backgroundColor: const Color(0xFF6366F1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    label: Text(
-                      "Approve & Mark as Insured",
-                      style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                  ),
+                  label: Text(
+                    "Approve & Mark as Insured",
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.white,
                     ),
-                    onPressed: () async {
-                      try {
-                        final vehicleRef = FirebaseFirestore.instance
-                            .collection('vehicles')
-                            .doc(vehicleId);
-                        final requestRef = FirebaseFirestore.instance
-                            .collection('insurance_requests')
-                            .doc(requestId);
-                        final policiesRef = FirebaseFirestore.instance
-                            .collection('insurance_policies');
+                  ),
+                  onPressed: () async {
+                    try {
+                      final vehicleRef = FirebaseFirestore.instance
+                          .collection('vehicles')
+                          .doc(vehicleId);
+                      final requestRef = FirebaseFirestore.instance
+                          .collection('insurance_requests')
+                          .doc(requestId);
+                      final policiesRef = FirebaseFirestore.instance
+                          .collection('insurance_policies');
 
-                        // Fetch latest vehicle data
-                        final vehicleSnapshot = await vehicleRef.get();
-                        final vehicleData =
-                            vehicleSnapshot.data() as Map<String, dynamic>;
+                      final vehicleSnapshot = await vehicleRef.get();
+                      final vehicleData =
+                          vehicleSnapshot.data() as Map<String, dynamic>;
+                      final now = DateTime.now();
 
-                        final now = DateTime.now();
+                      await vehicleRef.update({'isInsured': true});
+                      await requestRef.update({
+                        'status': 'approved',
+                        'paymentConfirmed': true,
+                      });
 
-                        // Step 1: Update vehicle & request
-                        await vehicleRef.update({'isInsured': true});
-                        await requestRef.update({'status': 'approved'});
-                        await requestRef.update({'paymentConfirmed': true});
+                      final currentPolicies = await policiesRef
+                          .where('vehicleId', isEqualTo: vehicleId)
+                          .where('isCurrent', isEqualTo: true)
+                          .get();
 
-                        final currentPolicies = await policiesRef
-                            .where('vehicleId', isEqualTo: vehicleId)
-                            .where('isCurrent', isEqualTo: true)
-                            .get();
-
-                        for (var doc in currentPolicies.docs) {
-                          if (doc.exists && doc.id != requestRef.id) {
-                            await doc.reference.update({'isCurrent': false});
-                          }
+                      for (var doc in currentPolicies.docs) {
+                        if (doc.exists && doc.id != requestRef.id) {
+                          await doc.reference.update({'isCurrent': false});
                         }
-
-                        // Step 2: Add insurance policy
-                        await policiesRef.add({
-                          'vehicleId': vehicleId,
-                          'registrationNumber':
-                              vehicleData['registrationNumber'],
-                          'model': vehicleData['model'],
-                          'policyValue': requestData['selectedOffer']['price'],
-                          'year': now.year,
-                          'isCurrent': true,
-                          'createdAt': Timestamp.now(),
-                        });
-                        
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text(
-                                'Request approved and policy created.'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-
-                        Navigator.of(context).pop();
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
                       }
-                    }),
+
+                      await policiesRef.add({
+                        'vehicleId': vehicleId,
+                        'registrationNumber': vehicleData['registrationNumber'],
+                        'model': vehicleData['model'],
+                        'policyValue': requestData['selectedOffer']['price'],
+                        'year': now.year,
+                        'isCurrent': true,
+                        'createdAt': Timestamp.now(),
+                      });
+
+                      _showStyledSnackbar(
+                          context, 'Request approved and policy created.');
+                      Navigator.of(context).pop();
+                    } catch (e) {
+                      _showStyledSnackbar(context, 'Error: $e', isError: true);
+                    }
+                  },
+                ),
               ],
             ),
           );
@@ -152,16 +193,20 @@ class PaymentDetailsPage extends StatelessWidget {
 
   Widget _infoCard({required String title, required List<Widget> children}) {
     return Card(
-      elevation: 3,
+      elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style: GoogleFonts.poppins(
-                    fontSize: 18, fontWeight: FontWeight.w600)),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
             ...children,
           ],
@@ -170,20 +215,25 @@ class PaymentDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(String label, String? value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            '$label: ',
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[800],
+            ),
+          ),
           Expanded(
-              flex: 3,
-              child: Text(label,
-                  style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w500, color: Colors.grey[700]))),
-          Expanded(
-              flex: 4,
-              child: Text(value,
-                  style: GoogleFonts.poppins(color: Colors.black87))),
+            child: Text(
+              value ?? 'N/A',
+              style: GoogleFonts.poppins(),
+            ),
+          ),
         ],
       ),
     );

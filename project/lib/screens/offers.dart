@@ -33,11 +33,10 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
 
     if (snapshot.docs.isNotEmpty) {
       final doc = snapshot.docs.first;
-      final data = doc.data();
-
       requestDocId = doc.id;
 
-      final List<dynamic>? options = data['adminResponse']?['offerOptions'];
+      final List<dynamic>? options =
+          doc.data()['adminResponse']?['offerOptions'];
       if (options != null) {
         offers = options.whereType<Map<String, dynamic>>().toList();
       }
@@ -47,15 +46,15 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
   }
 
   Future<void> _submitSelectedOffer() async {
-    if (selectedIndex == null || requestDocId == null || adjustedPrice == null) {
-      _showSnackbar('Please select and adjust an offer');
+    if (selectedIndex == null ||
+        requestDocId == null ||
+        adjustedPrice == null) {
+      _showStyledSnackbar(context, 'Please select and adjust an offer');
       return;
     }
 
-    final originalOffer = offers[selectedIndex!];
-
     final selectedOffer = {
-      ...originalOffer,
+      ...offers[selectedIndex!],
       'price': adjustedPrice!.round(),
     };
 
@@ -67,38 +66,46 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
       'status': 'offer_selected',
     });
 
-    _showSnackbar('Offer submitted successfully', isError: false);
+    _showStyledSnackbar(context, 'Offer submitted successfully', isError: false);
     Navigator.pop(context);
   }
 
-  void _showSnackbar(String message, {bool isError = true}) {
-    final backgroundColor = isError ? Colors.red[400]! : Colors.green[600]!;
-    final icon = Icon(
+  void _showStyledSnackbar(
+    BuildContext context,
+    String message, {
+    bool isError = true,
+  }) {
+    final Color backgroundColor =
+        isError ? Colors.red[400]! : Colors.green[600]!;
+    final Icon icon = Icon(
       isError ? Icons.error_outline : Icons.check_circle_outline,
       color: Colors.white,
+      size: 24,
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             icon,
             const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
+            Text(
+              message,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
+        showCloseIcon: true,
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -109,9 +116,9 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
+        backgroundColor: const Color(0xFFE0E7FF),
         elevation: 6,
-        shadowColor: Colors.black38,
+        shadowColor: Colors.black26,
         centerTitle: true,
         toolbarHeight: 70,
         title: Text(
@@ -157,11 +164,11 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
                             final isSelected = index == selectedIndex;
 
                             return Card(
-                              elevation: 3,
                               margin: const EdgeInsets.symmetric(vertical: 8),
                               color: isSelected
                                   ? Colors.indigo.shade100
                                   : Colors.white,
+                              elevation: 3,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -171,15 +178,16 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
                                 title: Text(
                                   '${offer['price']} BD',
                                   style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.bold,
                                     fontSize: 18,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 subtitle: Text(
                                   'Validity: ${offer['validity']}',
                                   style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade700),
+                                    fontSize: 14,
+                                    color: Colors.grey.shade700,
+                                  ),
                                 ),
                                 trailing: isSelected
                                     ? const Icon(Icons.check_circle,
@@ -200,7 +208,8 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
                       const SizedBox(height: 20),
                       if (selectedIndex != null)
                         Builder(builder: (context) {
-                          final original = offers[selectedIndex!]['price'] as num;
+                          final original =
+                              offers[selectedIndex!]['price'] as num;
                           final double min = (original * 0.95).floorToDouble();
                           final double max = (original * 1.05).ceilToDouble();
                           adjustedPrice ??= original.toDouble();
@@ -213,11 +222,13 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15,
+                                  color: Colors.black87,
                                 ),
                               ),
                               const SizedBox(height: 10),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text('Min: ${min.toStringAsFixed(0)} BD',
                                       style: GoogleFonts.poppins(
@@ -236,8 +247,7 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
                                   thumbColor: Colors.indigo,
                                   thumbShape: const RoundSliderThumbShape(
                                       enabledThumbRadius: 10),
-                                  overlayColor:
-                                      Colors.indigo.withOpacity(0.2),
+                                  overlayColor: Colors.indigo.withOpacity(0.2),
                                   overlayShape: const RoundSliderOverlayShape(
                                       overlayRadius: 20),
                                   valueIndicatorColor: Colors.indigo,
@@ -247,7 +257,8 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
                                   min: min,
                                   max: max,
                                   divisions: (max - min).toInt(),
-                                  label: '${adjustedPrice!.toStringAsFixed(0)} BD',
+                                  label:
+                                      '${adjustedPrice!.toStringAsFixed(0)} BD',
                                   onChanged: (value) {
                                     setState(() => adjustedPrice = value);
                                   },
@@ -266,7 +277,7 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
                             ],
                           );
                         }),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(

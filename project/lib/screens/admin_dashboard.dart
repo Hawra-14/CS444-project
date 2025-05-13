@@ -7,12 +7,19 @@ import 'package:project/screens/request_Details.dart';
 
 class AdminHomeScreen extends StatelessWidget {
   const AdminHomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
         appBar: AppBar(
+          backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
+          elevation: 6,
+          shadowColor: Colors.black38,
+          centerTitle: true,
+          toolbarHeight: 70,
           title: Text(
             "Admin Panel",
             style: GoogleFonts.poppins(
@@ -21,12 +28,11 @@ class AdminHomeScreen extends StatelessWidget {
               color: Colors.black87,
             ),
           ),
-          backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
-          elevation: 6,
-          shadowColor: Colors.black38,
-          centerTitle: true,
-          toolbarHeight: 70,
           bottom: const TabBar(
+            labelColor: Color(0xFF4F46E5),
+            unselectedLabelColor: Colors.black54,
+            indicatorColor: Color(0xFF4F46E5),
+            labelStyle: TextStyle(fontWeight: FontWeight.w600),
             tabs: [
               Tab(text: 'Insurance Requests'),
               Tab(text: 'Offer Requests'),
@@ -86,37 +92,25 @@ class InsuranceRequestsTab extends StatelessWidget {
                 if (vehicleData == null) return const SizedBox();
 
                 final model = vehicleData['model'] ?? 'Unknown Model';
-                final registrationNumber =
-                    vehicleData['registrationNumber'] ?? 'Unknown';
-                final chassisNumber = vehicleData['chassisNumber'] ?? 'Unknown';
+                final regNumber = vehicleData['registrationNumber'] ?? 'Unknown';
+                final chassis = vehicleData['chassisNumber'] ?? 'Unknown';
 
-                return Card(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  child: ListTile(
-                    title: Text(model),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Reg#: $registrationNumber"),
-                        Text("Chassis#: $chassisNumber"),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RequestDetailsPage(
-                            requestId: req.id,
-                            vehicleId: vehicleId,
-                            requestData: req.data() as Map<String, dynamic>,
-                          ),
+                return VehicleRequestCard(
+                  title: model,
+                  regNumber: regNumber,
+                  chassisNumber: chassis,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => RequestDetailsPage(
+                          requestId: req.id,
+                          vehicleId: vehicleId,
+                          requestData: req.data() as Map<String, dynamic>,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             );
@@ -146,12 +140,12 @@ class OfferSelectionRequestsTab extends StatelessWidget {
           return const Center(child: Text("No offer selection requests."));
         }
 
-        final offerRequests = snapshot.data!.docs;
+        final requests = snapshot.data!.docs;
 
         return ListView.builder(
-          itemCount: offerRequests.length,
+          itemCount: requests.length,
           itemBuilder: (context, index) {
-            final req = offerRequests[index];
+            final req = requests[index];
             final vehicleId = req['vehicleId'];
 
             return StreamBuilder<DocumentSnapshot>(
@@ -167,37 +161,25 @@ class OfferSelectionRequestsTab extends StatelessWidget {
                 if (vehicleData == null) return const SizedBox();
 
                 final model = vehicleData['model'] ?? 'Unknown Model';
-                final registrationNumber =
-                    vehicleData['registrationNumber'] ?? 'Unknown';
-                final chassisNumber = vehicleData['chassisNumber'] ?? 'Unknown';
+                final regNumber = vehicleData['registrationNumber'] ?? 'Unknown';
+                final chassis = vehicleData['chassisNumber'] ?? 'Unknown';
 
-                return Card(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  child: ListTile(
-                    title: Text(model),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Reg#: $registrationNumber"),
-                        Text("Chassis#: $chassisNumber"),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => OfferSelectionDetailsPage(
-                            requestId: req.id,
-                            vehicleId: vehicleId,
-                            requestData: req.data() as Map<String, dynamic>,
-                          ),
+                return VehicleRequestCard(
+                  title: model,
+                  regNumber: regNumber,
+                  chassisNumber: chassis,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OfferSelectionDetailsPage(
+                          requestId: req.id,
+                          vehicleId: vehicleId,
+                          requestData: req.data() as Map<String, dynamic>,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             );
@@ -227,12 +209,12 @@ class PaymentApprovalTab extends StatelessWidget {
           return const Center(child: Text("No payments pending approval."));
         }
 
-        final payments = snapshot.data!.docs;
-      
+        final requests = snapshot.data!.docs;
+
         return ListView.builder(
-          itemCount: payments.length,
+          itemCount: requests.length,
           itemBuilder: (context, index) {
-            final req = payments[index];
+            final req = requests[index];
             final vehicleId = req['vehicleId'];
 
             return StreamBuilder<DocumentSnapshot>(
@@ -248,43 +230,79 @@ class PaymentApprovalTab extends StatelessWidget {
                 if (vehicleData == null) return const SizedBox();
 
                 final model = vehicleData['model'] ?? 'Unknown Model';
-                final registrationNumber =
-                    vehicleData['registrationNumber'] ?? 'Unknown';
-                final chassisNumber = vehicleData['chassisNumber'] ?? 'Unknown';
+                final regNumber = vehicleData['registrationNumber'] ?? 'Unknown';
+                final chassis = vehicleData['chassisNumber'] ?? 'Unknown';
 
-                return Card(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  child: ListTile(
-                    title: Text(model),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Reg#: $registrationNumber"),
-                        Text("Chassis#: $chassisNumber"),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PaymentDetailsPage(
-                            requestId: req.id,
-                            vehicleId: vehicleId,
-                            requestData: req.data() as Map<String, dynamic>,
-                          ),
+                return VehicleRequestCard(
+                  title: model,
+                  regNumber: regNumber,
+                  chassisNumber: chassis,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PaymentDetailsPage(
+                          requestId: req.id,
+                          vehicleId: vehicleId,
+                          requestData: req.data() as Map<String, dynamic>,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             );
           },
         );
       },
+    );
+  }
+}
+class VehicleRequestCard extends StatelessWidget {
+  final String title;
+  final String regNumber;
+  final String chassisNumber;
+  final VoidCallback onTap;
+
+  const VehicleRequestCard({
+    super.key,
+    required this.title,
+    required this.regNumber,
+    required this.chassisNumber,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: ListTile(
+        tileColor: Colors.white,
+        title: Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+            color: Colors.black87,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Reg#: $regNumber",
+                  style: GoogleFonts.poppins(fontSize: 14)),
+              Text("Chassis#: $chassisNumber",
+                  style: GoogleFonts.poppins(fontSize: 14)),
+            ],
+          ),
+        ),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     );
   }
 }
