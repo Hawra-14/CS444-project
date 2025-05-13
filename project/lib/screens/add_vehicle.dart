@@ -292,6 +292,10 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
                     return '*Driver age is required';
                   } else if (int.tryParse(value) == null) {
                     return '*Invalid driver age';
+                  } else if (int.tryParse(value) != null) {
+                    if (int.tryParse(value)! > 100) {
+                      return '*Invalid driver age';
+                    }
                   }
                   return null;
                 },
