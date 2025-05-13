@@ -21,8 +21,8 @@ class SelectedOfferPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Completed Request')),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('vehicles').doc(vehicleId).get(),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance.collection('vehicles').doc(vehicleId).snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 

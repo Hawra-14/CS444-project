@@ -73,11 +73,11 @@ class InsuranceRequestsTab extends StatelessWidget {
             final req = requests[index];
             final vehicleId = req['vehicleId'];
 
-            return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
+            return StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
                   .collection('vehicles')
                   .doc(vehicleId)
-                  .get(),
+                  .snapshots(),
               builder: (context, vehicleSnapshot) {
                 if (!vehicleSnapshot.hasData) return const SizedBox();
                 final vehicleData =
@@ -154,11 +154,11 @@ class OfferSelectionRequestsTab extends StatelessWidget {
             final req = offerRequests[index];
             final vehicleId = req['vehicleId'];
 
-            return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
+            return StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
                   .collection('vehicles')
                   .doc(vehicleId)
-                  .get(),
+                  .snapshots(),
               builder: (context, vehicleSnapshot) {
                 if (!vehicleSnapshot.hasData) return const SizedBox();
                 final vehicleData =
@@ -235,11 +235,11 @@ class PaymentApprovalTab extends StatelessWidget {
             final req = payments[index];
             final vehicleId = req['vehicleId'];
 
-            return FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
+            return StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
                   .collection('vehicles')
                   .doc(vehicleId)
-                  .get(),
+                  .snapshots(),
               builder: (context, vehicleSnapshot) {
                 if (!vehicleSnapshot.hasData) return const SizedBox();
                 final vehicleData =

@@ -31,11 +31,11 @@ class PaymentDetailsPage extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black87),
         elevation: 4,
       ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
             .collection('vehicles')
             .doc(vehicleId)
-            .get(),
+            .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData)
             return const Center(child: CircularProgressIndicator());

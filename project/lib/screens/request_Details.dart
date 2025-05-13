@@ -83,7 +83,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         ];
 
         await requestRef.update({
-          'status': 'offersSent',
+          'status': 'offers_sent',
           'adminResponse': {
             'offerOptions': offerOptions,
           },
@@ -119,11 +119,11 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
         ),
         backgroundColor: const Color(0xFFE0E7FF).withOpacity(0.95),
       ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
             .collection('vehicles')
             .doc(widget.vehicleId)
-            .get(),
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

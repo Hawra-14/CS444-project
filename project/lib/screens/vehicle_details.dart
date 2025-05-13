@@ -68,7 +68,8 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
           .doc(widget.vehicleId)
           .update(updatedData);
 
-      _showStyledSnackbar(context, 'Vehicle details updated successfully!', isError: false);
+      _showStyledSnackbar(context, 'Vehicle details updated successfully!',
+          isError: false);
     }
   }
 
@@ -271,16 +272,47 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
                       ),
                     );
                     if (confirm == true) {
-                      await FirebaseFirestore.instance
-                          .collection('vehicles')
-                          .doc(widget.vehicleId)
-                          .delete();
+                      try {
+                        final batch = FirebaseFirestore.instance.batch();
 
-                      _showStyledSnackbar(context, 'Vehicle deleted successfully!', isError: false);
-      
-                      Navigator.pop(context); // Go back to the previous screen
+                        final vehicleRef = FirebaseFirestore.instance
+                            .collection('vehicles')
+                            .doc(widget.vehicleId);
+
+                        // Delete the vehicle document
+                        batch.delete(vehicleRef);
+
+                        // Helper function to delete related documents by vehicleId
+                        Future<void> deleteRelatedDocuments(
+                            String collectionName) async {
+                          final querySnapshot = await FirebaseFirestore.instance
+                              .collection(collectionName)
+                              .where('vehicleId', isEqualTo: widget.vehicleId)
+                              .get();
+
+                          for (var doc in querySnapshot.docs) {
+                            batch.delete(doc.reference);
+                          }
+                        }
+
+                        // Delete related records in other collections
+                        await deleteRelatedDocuments('insurance_policies');
+                        await deleteRelatedDocuments('accidents');
+                        await deleteRelatedDocuments('insurance_requests');
+
+                        // Commit the batch delete
+                        await batch.commit();
+
+                        _showStyledSnackbar(context,
+                            'Vehicle and related records deleted successfully!',
+                            isError: false);
+
+                        Navigator.pop(context); // Go back to previous screen
+                      } catch (e) {
+                        _showStyledSnackbar(
+                            context, 'Error deleting vehicle: $e');
+                      }
                     }
-
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromARGB(255, 231, 87, 76),
@@ -333,44 +365,45 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
       ),
     );
   }
+
   void _showStyledSnackbar(
     BuildContext context,
     String message, {
     bool isError = true,
-    }) {
-      final Color backgroundColor = isError ? Colors.red[400]! : Colors.green[600]!;
-      final Icon icon = Icon(
-        isError ? Icons.error_outline : Icons.check_circle_outline,
-        color: Colors.white,
-        size: 24,
-      );
+  }) {
+    final Color backgroundColor =
+        isError ? Colors.red[400]! : Colors.green[600]!;
+    final Icon icon = Icon(
+      isError ? Icons.error_outline : Icons.check_circle_outline,
+      color: Colors.white,
+      size: 24,
+    );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              icon,
-              const SizedBox(width: 12),
-              Text(
-                message,
-                style: GoogleFonts.poppins(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            icon,
+            const SizedBox(width: 12),
+            Text(
+              message,
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
-            ],
-          ),
-          showCloseIcon: true,
-          backgroundColor: backgroundColor,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          duration: const Duration(seconds: 3),
+            ),
+          ],
         ),
-      );
-    }
-
+        showCloseIcon: true,
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
 }

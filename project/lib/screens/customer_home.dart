@@ -86,7 +86,8 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const InsurancePolicyReportPage()),
+                          builder: (context) =>
+                              const InsurancePolicyReportPage()),
                     );
                   },
                 ),
@@ -99,9 +100,9 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => AccidentReportScreen(
-                          // vehicleId: 'exampleVehicleId',
-                          // vehicleData: {},
-                        ),
+                            // vehicleId: 'exampleVehicleId',
+                            // vehicleData: {},
+                            ),
                       ),
                     );
                   },
@@ -224,12 +225,12 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                               ),
                             ],
                           ),
-                          trailing: FutureBuilder<QuerySnapshot>(
-                            future: FirebaseFirestore.instance
+                          trailing: StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
                                 .collection('insurance_requests')
                                 .where('vehicleId', isEqualTo: vehicle.id)
                                 .limit(1)
-                                .get(),
+                                .snapshots(),
                             builder: (context, insuranceSnapshot) {
                               if (insuranceSnapshot.connectionState ==
                                   ConnectionState.waiting) {
@@ -240,7 +241,6 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                       CircularProgressIndicator(strokeWidth: 2),
                                 );
                               }
-
                               String buttonText;
                               Color backgroundColor;
                               Color textColor;
@@ -296,7 +296,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                   onPressed: isButtonDisabled
                                       ? null
                                       : () {
-                                          if (status == 'offersSent') {
+                                          if (status == 'offers_sent') {
                                             Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
@@ -370,8 +370,17 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
     );
   }
 
-  void _showInsuranceDialog(BuildContext context, String vehicleId) {
+  void _showInsuranceDialog(BuildContext context, String vehicleId) async {
     bool hasAccident = false;
+
+    // Fetch vehicle insurance status beforehand
+    final vehicleSnapshot = await FirebaseFirestore.instance
+        .collection('vehicles')
+        .doc(vehicleId)
+        .get();
+
+    final vehicleData = vehicleSnapshot.data() as Map<String, dynamic>;
+    final isInsured = vehicleData['isInsured'] == true;
 
     showDialog(
       context: context,
@@ -387,17 +396,16 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                       "Please provide the necessary details for insurance:"),
                   const SizedBox(height: 10),
                   CheckboxListTile(
-                      value: hasAccident,
-                      onChanged: (value) {
-                        setState(
-                          () {
-                            if (value != null) {
-                              hasAccident = value;
-                            }
-                          },
-                        );
-                      },
-                      title: const Text('Has the vehicle had an accident?'))
+                    value: hasAccident,
+                    onChanged: (value) {
+                      setState(() {
+                        if (value != null) {
+                          hasAccident = value;
+                        }
+                      });
+                    },
+                    title: const Text('Has the vehicle had an accident?'),
+                  ),
                 ],
               ),
               actions: [
@@ -419,7 +427,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                       final requestData = {
                         'vehicleId': vehicleId,
                         'userId': userId,
-                        'requestType': 'new',
+                        'requestType': isInsured ? 'renew' : 'new',
                         'submittedAt': Timestamp.now(),
                         'status': 'pending',
                         'adminResponse': {
@@ -430,7 +438,9 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                         'selectedOffer': null,
                         'paymentConfirmed': false,
                       };
+
                       await insuranceRequestRef.set(requestData);
+
                       if (hasAccident) {
                         final vehicleRef = FirebaseFirestore.instance
                             .collection('vehicles')
@@ -439,13 +449,12 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                           'hasAccidentBefore': true,
                         });
                       }
+
                       Navigator.of(context).pop();
                       _showStyledSnackbar(
                           context, 'Insurance request submitted!',
                           isError: false);
-                      setState(
-                        () {},
-                      );
+                      setState(() {});
                     } catch (e) {
                       _showStyledSnackbar(
                           context, 'Error submitting insurance request: $e',

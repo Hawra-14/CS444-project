@@ -84,11 +84,11 @@ class _OfferSelectionDetailsPageState
         foregroundColor: Colors.black,
         elevation: 1,
       ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
             .collection('vehicles')
             .doc(widget.vehicleId)
-            .get(),
+            .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
