@@ -16,7 +16,7 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
   int? selectedIndex;
   bool isLoading = true;
   String? requestDocId;
-  final TextEditingController _priceController = TextEditingController();
+  double? adjustedPrice;
 
   @override
   void initState() {
@@ -47,31 +47,16 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
   }
 
   Future<void> _submitSelectedOffer() async {
-    if (selectedIndex == null || requestDocId == null) {
-      _showSnackbar('Please select an offer');
+    if (selectedIndex == null || requestDocId == null || adjustedPrice == null) {
+      _showSnackbar('Please select and adjust an offer');
       return;
     }
 
     final originalOffer = offers[selectedIndex!];
-    final originalPrice = originalOffer['price'] as num;
-    final adjustedPrice = num.tryParse(_priceController.text);
-
-    if (adjustedPrice == null) {
-      _showSnackbar('Invalid price entered');
-      return;
-    }
-
-    final minAllowed = originalPrice * 0.95;
-    final maxAllowed = originalPrice * 1.05;
-
-    if (adjustedPrice < minAllowed || adjustedPrice > maxAllowed) {
-      _showSnackbar('Price must be within ±5% of $originalPrice BD');
-      return;
-    }
 
     final selectedOffer = {
       ...originalOffer,
-      'price': adjustedPrice.round(),
+      'price': adjustedPrice!.round(),
     };
 
     await FirebaseFirestore.instance
@@ -87,12 +72,10 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
   }
 
   void _showSnackbar(String message, {bool isError = true}) {
-    final Color backgroundColor =
-        isError ? Colors.red[400]! : Colors.green[600]!;
-    final Icon icon = Icon(
+    final backgroundColor = isError ? Colors.red[400]! : Colors.green[600]!;
+    final icon = Icon(
       isError ? Icons.error_outline : Icons.check_circle_outline,
       color: Colors.white,
-      size: 24,
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -115,9 +98,7 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
         backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
       ),
     );
@@ -207,8 +188,8 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
                                 onTap: () {
                                   setState(() {
                                     selectedIndex = index;
-                                    _priceController.text =
-                                        offer['price'].toString();
+                                    adjustedPrice =
+                                        (offer['price'] as num).toDouble();
                                   });
                                 },
                               ),
@@ -216,29 +197,75 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
                           },
                         ),
                       ),
-                      if (selectedIndex != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          'Adjust Price (±5%)',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _priceController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            hintText: 'Enter new price',
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                      ],
+                      const SizedBox(height: 20),
+                      if (selectedIndex != null)
+                        Builder(builder: (context) {
+                          final original = offers[selectedIndex!]['price'] as num;
+                          final double min = (original * 0.95).floorToDouble();
+                          final double max = (original * 1.05).ceilToDouble();
+                          adjustedPrice ??= original.toDouble();
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Adjust Price (±5%)',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Min: ${min.toStringAsFixed(0)} BD',
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.grey[700])),
+                                  Text('Max: ${max.toStringAsFixed(0)} BD',
+                                      style: GoogleFonts.poppins(
+                                          color: Colors.grey[700])),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 6,
+                                  activeTrackColor: Colors.indigo,
+                                  inactiveTrackColor: Colors.indigo.shade100,
+                                  thumbColor: Colors.indigo,
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 10),
+                                  overlayColor:
+                                      Colors.indigo.withOpacity(0.2),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                      overlayRadius: 20),
+                                  valueIndicatorColor: Colors.indigo,
+                                ),
+                                child: Slider(
+                                  value: adjustedPrice!.clamp(min, max),
+                                  min: min,
+                                  max: max,
+                                  divisions: (max - min).toInt(),
+                                  label: '${adjustedPrice!.toStringAsFixed(0)} BD',
+                                  onChanged: (value) {
+                                    setState(() => adjustedPrice = value);
+                                  },
+                                ),
+                              ),
+                              Center(
+                                child: Text(
+                                  'Selected: ${adjustedPrice!.toStringAsFixed(0)} BD',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }),
                       const SizedBox(height: 20),
                       SizedBox(
                         width: double.infinity,
