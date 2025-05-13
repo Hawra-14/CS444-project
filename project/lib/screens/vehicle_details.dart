@@ -276,12 +276,11 @@ class _VehicleDetailsPageState extends State<VehicleDetailsPage> {
                           .doc(widget.vehicleId)
                           .delete();
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Vehicle deleted.')),
-                      );
-
+                      _showStyledSnackbar(context, 'Vehicle deleted successfully!', isError: false);
+      
                       Navigator.pop(context); // Go back to the previous screen
                     }
+
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color.fromARGB(255, 231, 87, 76),

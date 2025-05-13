@@ -66,17 +66,17 @@ class PaymentDetailsPage extends StatelessWidget {
                 ]),
                 const Spacer(),
                 ElevatedButton.icon(
-                    icon: const Icon(Icons.check_circle_outline),
+                    icon: const Icon(Icons.check_circle_outline, color: Colors.white),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size.fromHeight(50),
-                      backgroundColor: Colors.green[600],
+                      backgroundColor: Color(0xFF6366F1),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
                     label: Text(
                       "Approve & Mark as Insured",
                       style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold, fontSize: 16),
+                          fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
                     ),
                     onPressed: () async {
                       try {

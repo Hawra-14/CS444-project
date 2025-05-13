@@ -10,37 +10,25 @@ class InsurancePolicyReportPage extends StatefulWidget {
 }
 
 class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
-  final TextEditingController _registrationController = TextEditingController();
-  final List<int> _years = List.generate(20, (index) => DateTime.now().year - index); // Last 20 years
-  String? _regFilter;
-  int? _yearFilter;
+  final TextEditingController _searchController = TextEditingController();
+  final List<int> _years = List.generate(20, (index) => DateTime.now().year - index);
+
+  String _searchQuery = '';
+  bool _filterByCRN = false;
+  int? _selectedYear;
 
   Stream<QuerySnapshot> _buildPolicyStream() {
     Query query = FirebaseFirestore.instance.collection('insurance_policies');
 
-    if (_regFilter != null && _regFilter!.isNotEmpty) {
-      query = query.where('registrationNumber', isEqualTo: _regFilter);
+    if (_searchQuery.isNotEmpty && _filterByCRN) {
+      query = query.where('registrationNumber', isEqualTo: _searchQuery);
     }
 
-    if (_yearFilter != null) {
-      query = query.where('year', isEqualTo: _yearFilter);
+    if (_selectedYear != null) {
+      query = query.where('year', isEqualTo: _selectedYear);
     }
 
     return query.orderBy('year', descending: true).snapshots();
-  }
-
-  void _applyFilters() {
-    setState(() {
-      _regFilter = _registrationController.text.trim();
-    });
-  }
-
-  void _clearFilters() {
-    _registrationController.clear();
-    setState(() {
-      _regFilter = null;
-      _yearFilter = null;
-    });
   }
 
   Widget _buildPolicyCard(Map<String, dynamic> data) {
@@ -87,73 +75,77 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Filters Section
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.indigo[50],
-                borderRadius: BorderRadius.circular(12),
+            // Search Field
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search by registration number...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.white,
               ),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _registrationController,
-                    decoration: InputDecoration(
-                      labelText: 'Registration Number',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.trim().toLowerCase();
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+
+            // Filter Options
+            Row(
+              children: [
+                // CRN filter
+                ChoiceChip(
+                  label: const Text("Filter by CRN"),
+                  selected: _filterByCRN,
+                  onSelected: (selected) {
+                    setState(() {
+                      _filterByCRN = selected;
+                    });
+                  },
+                  selectedColor: const Color(0xFF4F46E5),
+                  labelStyle: TextStyle(
+                    color: _filterByCRN ? Colors.white : Colors.black,
                   ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
+                ),
+                const SizedBox(width: 16),
+
+                // Year filter
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    value: _selectedYear,
+                    isExpanded: true,
                     decoration: InputDecoration(
                       labelText: 'Filter by Year',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    value: _yearFilter,
                     items: _years
-                        .map((year) => DropdownMenuItem(value: year, child: Text(year.toString())))
+                        .map((year) => DropdownMenuItem(
+                              value: year,
+                              child: Text(year.toString()),
+                            ))
                         .toList(),
-                    onChanged: (value) => setState(() => _yearFilter = value),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedYear = value;
+                      });
+                    },
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          icon: const Icon(Icons.search),
-                          label: const Text("Apply Filters"),
-                          onPressed: _applyFilters,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.indigo,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.clear),
-                        tooltip: 'Clear Filters',
-                        onPressed: _clearFilters,
-                      )
-                    ],
-                  ),
-                ],
-              ),
+                ),
+                if (_selectedYear != null)
+                  IconButton(
+                    tooltip: 'Clear Year',
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      setState(() {
+                        _selectedYear = null;
+                      });
+                    },
+                  )
+              ],
             ),
-
-            const SizedBox(height: 16),
-
-            // Active Filters Display
-            if (_regFilter != null || _yearFilter != null)
-              Wrap(
-                spacing: 8,
-                children: [
-                  if (_regFilter != null && _regFilter!.isNotEmpty)
-                    Chip(label: Text("Reg: $_regFilter")),
-                  if (_yearFilter != null)
-                    Chip(label: Text("Year: $_yearFilter")),
-                ],
-              ),
 
             const SizedBox(height: 16),
 

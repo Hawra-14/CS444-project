@@ -259,7 +259,8 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                                   ),
                                 ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor: Color(0xFF6366F1),
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -291,6 +292,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                                 ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -312,6 +314,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
   }
   
   Widget _buildInfoRow(String label, String value, {Color? textColor, bool isBold = false}) {
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(

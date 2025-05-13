@@ -135,10 +135,10 @@ class _OfferSelectionDetailsPageState
                           Expanded(
                             child: ElevatedButton.icon(
                               onPressed: () => _handleApproval(true),
-                              icon: const Icon(Icons.check),
-                              label: const Text('Approve'),
+                              icon: const Icon(Icons.check, color: Colors.white),
+                              label: const Text('Approve', style: TextStyle(fontWeight: FontWeight.bold)),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
+                                backgroundColor: Color(0xFF6366F1),
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                               ),
@@ -148,8 +148,8 @@ class _OfferSelectionDetailsPageState
                           Expanded(
                             child: ElevatedButton.icon(
                               onPressed: () => _handleApproval(false),
-                              icon: const Icon(Icons.close),
-                              label: const Text('Reject'),
+                              icon: const Icon(Icons.close, color: Colors.white),
+                              label: const Text('Reject', style: TextStyle(fontWeight: FontWeight.bold ),),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
