@@ -68,7 +68,16 @@ class InsuranceRequestsTab extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text("No pending requests."));
+          return Center(
+              child: Text(
+            "No pending requests",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ));
         }
 
         final requests = snapshot.data!.docs;
@@ -92,7 +101,8 @@ class InsuranceRequestsTab extends StatelessWidget {
                 if (vehicleData == null) return const SizedBox();
 
                 final model = vehicleData['model'] ?? 'Unknown Model';
-                final regNumber = vehicleData['registrationNumber'] ?? 'Unknown';
+                final regNumber =
+                    vehicleData['registrationNumber'] ?? 'Unknown';
                 final chassis = vehicleData['chassisNumber'] ?? 'Unknown';
 
                 return VehicleRequestCard(
@@ -137,7 +147,16 @@ class OfferSelectionRequestsTab extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text("No offer selection requests."));
+          return Center(
+              child: Text(
+            "No offer selection requests",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ));
         }
 
         final requests = snapshot.data!.docs;
@@ -161,7 +180,8 @@ class OfferSelectionRequestsTab extends StatelessWidget {
                 if (vehicleData == null) return const SizedBox();
 
                 final model = vehicleData['model'] ?? 'Unknown Model';
-                final regNumber = vehicleData['registrationNumber'] ?? 'Unknown';
+                final regNumber =
+                    vehicleData['registrationNumber'] ?? 'Unknown';
                 final chassis = vehicleData['chassisNumber'] ?? 'Unknown';
 
                 return VehicleRequestCard(
@@ -206,7 +226,16 @@ class PaymentApprovalTab extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return const Center(child: Text("No payments pending approval."));
+          return Center(
+              child: Text(
+            "No payments pending approval",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ));
         }
 
         final requests = snapshot.data!.docs;
@@ -230,7 +259,8 @@ class PaymentApprovalTab extends StatelessWidget {
                 if (vehicleData == null) return const SizedBox();
 
                 final model = vehicleData['model'] ?? 'Unknown Model';
-                final regNumber = vehicleData['registrationNumber'] ?? 'Unknown';
+                final regNumber =
+                    vehicleData['registrationNumber'] ?? 'Unknown';
                 final chassis = vehicleData['chassisNumber'] ?? 'Unknown';
 
                 return VehicleRequestCard(
@@ -258,6 +288,7 @@ class PaymentApprovalTab extends StatelessWidget {
     );
   }
 }
+
 class VehicleRequestCard extends StatelessWidget {
   final String title;
   final String regNumber;

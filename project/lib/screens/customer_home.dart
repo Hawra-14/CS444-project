@@ -145,7 +145,16 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No registered vehicles'));
+                  return Center(
+                      child: Text(
+                    'No registered vehicles',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700],
+                    ),
+                  ));
                 }
 
                 final filteredVehicles = snapshot.data!.docs.where((doc) {
@@ -257,8 +266,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                   backgroundColor = Colors.green.shade100;
                                   textColor = Colors.green.shade700;
                                   isButtonDisabled = false;
-                                }
-                                else {
+                                } else {
                                   if (status!.contains('_')) {
                                     var parts = status.split('_');
                                     parts[0] = parts[0][0].toUpperCase() +
@@ -272,7 +280,8 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                   }
                                   if (status == 'offer_selected' ||
                                       status == 'approved' ||
-                                      status == 'payment_done' ||  status == 'pending') {
+                                      status == 'payment_done' ||
+                                      status == 'pending') {
                                     isButtonDisabled = true;
                                   }
                                   if (status != 'rejected') {
@@ -283,7 +292,6 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                     textColor = Colors.red.shade700;
                                     isButtonDisabled = false;
                                   }
-                                  
                                 }
                               } else {
                                 buttonText = 'Not Insured';
@@ -302,7 +310,8 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                   onPressed: isButtonDisabled
                                       ? null
                                       : () {
-                                          if (status == 'offers_sent' || status == 'rejected') {
+                                          if (status == 'offers_sent' ||
+                                              status == 'rejected') {
                                             Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
@@ -329,7 +338,8 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                               setState(() {});
                                             }).catchError((error) {
                                               _showStyledSnackbar(context,
-                                                  'Failed to update payment: $error', isError: true);
+                                                  'Failed to update payment: $error',
+                                                  isError: true);
                                             });
                                           } else {
                                             _showInsuranceDialog(

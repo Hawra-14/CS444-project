@@ -20,7 +20,7 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
 
   String? _selectedVehicleId;
   List<Map<String, dynamic>> _insuredVehicles = [];
-  DateTime? _selectedAccidentDate; // Store the selected date
+  DateTime? _selectedAccidentDate;
 
   @override
   void initState() {
@@ -56,7 +56,6 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
     super.dispose();
   }
 
-  // Function to show date picker
   Future<void> _pickAccidentDate() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -69,7 +68,7 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
       setState(() {
         _selectedAccidentDate = pickedDate;
         _accidentDateController.text =
-            DateFormat.yMMMMd().format(pickedDate); // Format selected date
+            DateFormat.yMMMMd().format(pickedDate);
       });
     }
   }
@@ -93,99 +92,116 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              DropdownButtonFormField<String>(
-                value: _selectedVehicleId,
-                decoration: _inputDecoration(
-                    label: 'Select Insured Vehicle',
-                    icon: Icons.directions_car),
-                onChanged: (String? newValue) {
-                  setState(() => _selectedVehicleId = newValue);
-                },
-                items: _insuredVehicles.map((vehicle) {
-                  return DropdownMenuItem<String>(
-                    value: vehicle['id'],
-                    child: Text(
-                        '${vehicle['model']} - ${vehicle['registrationNumber']}'),
-                  );
-                }).toList(),
-                validator: (value) =>
-                    value == null ? '*Please select a vehicle' : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Date Picker for Accident Date
-              GestureDetector(
-                onTap: _pickAccidentDate,
-                child: AbsorbPointer(
-                  child: TextFormField(
-                    controller: _accidentDateController,
-                    decoration: _inputDecoration(
-                      label: 'Accident Date',
-                      hint: 'Select accident date',
-                      icon: Icons.calendar_today,
-                    ),
-                    validator: (value) => value == null || value.isEmpty
-                        ? '*Accident date is required'
-                        : null,
-                    readOnly:
-                        true, // Makes the field read-only since it will be filled using the date picker
+      body: _insuredVehicles.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  "You have no insured vehicles to report an accident for",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[700],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                controller: _damagedPartsController,
-                icon: Icons.build,
-                label: 'Damaged Parts',
-                hint: 'Enter damaged parts',
-                validator: (value) => value == null || value.isEmpty
-                    ? '*Damaged parts required'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                controller: _repairCostController,
-                icon: Icons.attach_money,
-                label: 'Repair Cost',
-                hint: 'e.g. 2500',
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  final cost = double.tryParse(value ?? '');
-                  if (value == null || value.isEmpty)
-                    return '*Repair cost required';
-                  if (cost == null || cost <= 0) return '*Invalid repair cost';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submitAccidentReport,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: _selectedVehicleId,
+                      decoration: _inputDecoration(
+                          label: 'Select Insured Vehicle',
+                          icon: Icons.directions_car),
+                      onChanged: (String? newValue) {
+                        setState(() => _selectedVehicleId = newValue);
+                      },
+                      items: _insuredVehicles.map((vehicle) {
+                        return DropdownMenuItem<String>(
+                          value: vehicle['id'],
+                          child: Text(
+                            '${vehicle['model']} - ${vehicle['registrationNumber']}',
+                            style: GoogleFonts.poppins(),
+                          ),
+                        );
+                      }).toList(),
+                      validator: (value) =>
+                          value == null ? '*Please select a vehicle' : null,
                     ),
-                  ),
-                  child: const Text('Submit Report',
-                      style: TextStyle(color: Colors.white)),
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: _pickAccidentDate,
+                      child: AbsorbPointer(
+                        child: TextFormField(
+                          controller: _accidentDateController,
+                          decoration: _inputDecoration(
+                            label: 'Accident Date',
+                            hint: 'Select accident date',
+                            icon: Icons.calendar_today,
+                          ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? '*Accident date is required'
+                              : null,
+                          readOnly: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _damagedPartsController,
+                      icon: Icons.build,
+                      label: 'Damaged Parts',
+                      hint: 'Enter damaged parts',
+                      validator: (value) => value == null || value.isEmpty
+                          ? '*Damaged parts required'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTextField(
+                      controller: _repairCostController,
+                      icon: Icons.attach_money,
+                      label: 'Repair Cost',
+                      hint: 'e.g. 2500',
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        final cost = double.tryParse(value ?? '');
+                        if (value == null || value.isEmpty)
+                          return '*Repair cost required';
+                        if (cost == null || cost <= 0)
+                          return '*Invalid repair cost';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _submitAccidentReport,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6366F1),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Submit Report',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
@@ -248,8 +264,7 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
     try {
       await FirebaseFirestore.instance.collection('accidents').add({
         'vehicleId': _selectedVehicleId,
-        'accidentDate':
-            _selectedAccidentDate ?? DateTime.now(), // Store the selected date
+        'accidentDate': _selectedAccidentDate ?? DateTime.now(),
         'damagedParts': _damagedPartsController.text,
         'repairCost': repairCost,
         'escalatedConsumptionRate': escalatedConsumptionRate,
@@ -265,7 +280,8 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
           isError: false);
       Navigator.pop(context);
     } catch (e) {
-      _showStyledSnackbar(context, 'Error submitting report: $e', isError: true);
+      _showStyledSnackbar(context, 'Error submitting report: $e',
+          isError: true);
     }
   }
 
@@ -289,11 +305,13 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
           children: [
             icon,
             const SizedBox(width: 12),
-            Text(
-              message,
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],

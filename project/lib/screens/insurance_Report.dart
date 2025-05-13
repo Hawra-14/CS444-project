@@ -6,12 +6,14 @@ class InsurancePolicyReportPage extends StatefulWidget {
   const InsurancePolicyReportPage({super.key});
 
   @override
-  State<InsurancePolicyReportPage> createState() => _InsurancePolicyReportPageState();
+  State<InsurancePolicyReportPage> createState() =>
+      _InsurancePolicyReportPageState();
 }
 
 class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
   final TextEditingController _searchController = TextEditingController();
-  final List<int> _years = List.generate(20, (index) => DateTime.now().year - index);
+  final List<int> _years =
+      List.generate(20, (index) => DateTime.now().year - index);
 
   String _searchQuery = '';
   bool _filterByCRN = false;
@@ -64,9 +66,11 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
           children: [
             Text("Model: ${data['model']}", style: _titleStyle()),
             const SizedBox(height: 4),
-            Text("Registration Number: ${data['registrationNumber']}", style: _bodyStyle()),
+            Text("Registration Number: ${data['registrationNumber']}",
+                style: _bodyStyle()),
             Text("Year: ${data['year']}", style: _bodyStyle()),
-            Text("Policy Value: ${data['policyValue']} BD", style: _bodyStyle()),
+            Text("Policy Value: ${data['policyValue']} BD",
+                style: _bodyStyle()),
             if (data['isCurrent'] == true)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -83,8 +87,10 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
   }
 
   // TextStyle helpers for consistent typography
-  TextStyle _titleStyle() => GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600);
-  TextStyle _bodyStyle() => GoogleFonts.poppins(fontSize: 14, color: Colors.black87);
+  TextStyle _titleStyle() =>
+      GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600);
+  TextStyle _bodyStyle() =>
+      GoogleFonts.poppins(fontSize: 14, color: Colors.black87);
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +121,8 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
               decoration: InputDecoration(
                 hintText: 'Search by registration number...',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: Colors.white,
               ),
@@ -153,7 +160,8 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
                     isExpanded: true,
                     decoration: InputDecoration(
                       labelText: 'Filter by Year',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     items: _years
                         .map((year) => DropdownMenuItem(
@@ -193,7 +201,16 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
                   }
 
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text("No insurance policies found."));
+                    return Center(
+                        child: Text(
+                      "No insurance policies found",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey[700],
+                      ),
+                    ));
                   }
 
                   final docs = snapshot.data!;
@@ -201,7 +218,8 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
                   return ListView.builder(
                     itemCount: docs.length,
                     itemBuilder: (context, index) {
-                      return _buildPolicyCard(docs[index].data() as Map<String, dynamic>);
+                      return _buildPolicyCard(
+                          docs[index].data() as Map<String, dynamic>);
                     },
                   );
                 },
