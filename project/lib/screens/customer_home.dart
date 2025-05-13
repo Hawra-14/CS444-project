@@ -5,8 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:project/screens/add_vehicle.dart';
+import 'package:project/screens/insurance_Report.dart';
+import 'package:project/screens/offers.dart';
 import 'package:project/screens/vehicle_details.dart';
-
+import 'package:project/screens/accident_Report.dart';
 
 class CustomerHomeScreen extends StatefulWidget {
   const CustomerHomeScreen({super.key});
@@ -37,9 +39,6 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
             color: Colors.black87,
           ),
         ),
-        actions: [
-          IconButton(icon: Icon(Icons.notifications), onPressed: () {})
-        ],
       ),
       drawer: Drawer(
         child: FutureBuilder<DocumentSnapshot>(
@@ -63,7 +62,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                     color: Color(0xFFE0E7FF),
                   ),
                   currentAccountPicture: CircleAvatar(
-                    backgroundColor:  Color(0xFF4F46E5),
+                    backgroundColor: Color(0xFF4F46E5),
                     child: Icon(Icons.person, color: Colors.white, size: 32),
                   ),
                   accountName: Text(
@@ -79,37 +78,32 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                     style: GoogleFonts.poppins(color: Colors.black54),
                   ),
                 ),
-
                 ListTile(
-                  leading: const Icon(Icons.notifications),
-                  title: const Text('Notifications'),
+                  leading: const Icon(Icons.assignment),
+                  title: const Text('Insurance Report'),
                   onTap: () {
                     Navigator.pop(context);
-                    //Navigator.pushNamed(context, '/notifications');
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.local_offer),
-                  title: const Text('Offers'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    //Navigator.pushNamed(context, '/offers');
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.policy),
-                  title: const Text('Insurance Policy Report'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/policy-report');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const InsuranceReportPage()),
+                    );
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.car_crash),
-                  title: const Text('Accident Report & Claims'),
+                  title: const Text('Accident Report'),
                   onTap: () {
                     Navigator.pop(context);
-                    Navigator.pushNamed(context, '/accident-claims');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AccidentReportPage(
+                          vehicleId: 'exampleVehicleId',
+                          vehicleData: {},
+                        ),
+                      ),
+                    );
                   },
                 ),
                 const Divider(),
@@ -118,7 +112,6 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
           },
         ),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -126,7 +119,7 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search by model or registration number ...',
+                hintText: 'Search for a vehicle ...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -190,7 +183,8 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => VehicleDetailsPage(vehicleId: vehicle.id),
+                              builder: (context) =>
+                                  VehicleDetailsPage(vehicleId: vehicle.id),
                             ),
                           );
                         },
@@ -251,16 +245,20 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                               Color backgroundColor;
                               Color textColor;
                               bool isButtonDisabled = false;
+                              String? status;
 
                               if (insuranceSnapshot.hasData &&
                                   insuranceSnapshot.data!.docs.isNotEmpty) {
                                 final request =
                                     insuranceSnapshot.data!.docs.first;
-                                final status = request['status'];
+                                status = request['status'];
 
-                                buttonText = status[0].toUpperCase() +
+                                buttonText = status![0].toUpperCase() +
                                     status.substring(1);
-                                isButtonDisabled = true;
+                                if (status == 'offerSelected' ||
+                                    status == 'payed') {
+                                  isButtonDisabled = true;
+                                }
                                 backgroundColor = Colors.blue.shade100;
                                 textColor = Colors.blue.shade700;
                               } else {
@@ -286,8 +284,16 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                   onPressed: isButtonDisabled
                                       ? null
                                       : () {
+                                        if (status == 'offersSent') {
+                                          Navigator.push(context, MaterialPageRoute(builder: (context) => OfferSelectionPage(vehicleId: vehicle.id)));
+                                        } else if (status == 'awaiting_payment') {
+                                          
+                                        }
+                                        else {
                                           _showInsuranceDialog(
                                               context, vehicle.id);
+                                        }
+                                          
                                         },
                                   style: TextButton.styleFrom(
                                     padding: EdgeInsets.zero,
