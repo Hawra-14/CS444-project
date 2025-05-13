@@ -275,7 +275,7 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
                     return '*Invalid number of Passengers';
                   } else if (int.tryParse(value) != null) {
                     if (int.tryParse(value)! > 100) {
-                      return '*Number of passengers should not be more than 10';
+                      return '*Number of passengers should not be more than 100';
                     }
                   }
                   return null;
