@@ -17,20 +17,41 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
   bool _filterByCRN = false;
   int? _selectedYear;
 
-  Stream<QuerySnapshot> _buildPolicyStream() {
-    Query query = FirebaseFirestore.instance.collection('insurance_policies');
+  // Stream that fetches and filters insurance policies
+  Stream<List<QueryDocumentSnapshot>> _buildPolicyStream() async* {
+    // Fetch all policies from the collection
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('insurance_policies')
+        .orderBy('year', descending: true)
+        .get();
 
-    if (_searchQuery.isNotEmpty && _filterByCRN) {
-      query = query.where('registrationNumber', isEqualTo: _searchQuery);
+    List<QueryDocumentSnapshot> allDocs = querySnapshot.docs;
+
+    // Apply CRN filter (only current policies)
+    if (_filterByCRN) {
+      allDocs = allDocs.where((doc) => doc['isCurrent'] == true).toList();
     }
 
+    // Apply search query (contains) for registration number
+    if (_searchQuery.isNotEmpty) {
+      allDocs = allDocs
+          .where((doc) => doc['registrationNumber']
+              .toString()
+              .toLowerCase()
+              .contains(_searchQuery))
+          .toList();
+    }
+
+    // Apply year filter
     if (_selectedYear != null) {
-      query = query.where('year', isEqualTo: _selectedYear);
+      allDocs = allDocs.where((doc) => doc['year'] == _selectedYear).toList();
     }
 
-    return query.orderBy('year', descending: true).snapshots();
+    // Yield the filtered list
+    yield allDocs;
   }
 
+  // Helper method to build each policy card
   Widget _buildPolicyCard(Map<String, dynamic> data) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -61,6 +82,7 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
     );
   }
 
+  // TextStyle helpers
   TextStyle _titleStyle() => GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600);
   TextStyle _bodyStyle() => GoogleFonts.poppins(fontSize: 14, color: Colors.black87);
 
@@ -151,18 +173,18 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
 
             // Results
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
+              child: StreamBuilder<List<QueryDocumentSnapshot>>(
                 stream: _buildPolicyStream(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
                     return const Center(child: Text("No insurance policies found."));
                   }
 
-                  final docs = snapshot.data!.docs;
+                  final docs = snapshot.data!;
 
                   return ListView.builder(
                     itemCount: docs.length,
