@@ -593,6 +593,7 @@ Future<void> createNotification(String vehicleId) async {
     // Create notification data with customer name
     await FirebaseFirestore.instance.collection('notifications').add({
       'userId': userId,
+      'vehicleId': vehicleId,
       'message':
           '$customerName has submitted an insurance request for $model with Id $vehicleId',
       'type': 'insurance_request',
@@ -638,6 +639,7 @@ Future<void> createNotification2(String vehicleId) async {
     // Create notification data with customer name
     await FirebaseFirestore.instance.collection('notifications').add({
       'userId': userId,
+      'vehicleId': vehicleId,
       'message':
           '$customerName has payed for $model with Id $vehicleId insurance request',
       'type': 'insurance_request',

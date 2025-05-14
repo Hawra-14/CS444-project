@@ -77,7 +77,7 @@ class _OfferSelectionDetailsPageState extends State<OfferSelectionDetailsPage> {
         await requestRef.update({'status': 'rejected'});
         _showStyledSnackbar(context, 'Offer rejected.', isError: true);
       }
-
+      deleteNotification(widget.vehicleId);
       Navigator.pop(context);
     } catch (e) {
       _showStyledSnackbar(context, 'Error: $e', isError: true);
@@ -315,3 +315,22 @@ class _OfferSelectionDetailsPageState extends State<OfferSelectionDetailsPage> {
     ]);
   }
 }
+
+Future<void> deleteNotification(String vehicleId) async {
+  try {
+    // Fetch the notification related to the vehicleId and user
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('notifications')
+        .where('vehicleId', isEqualTo: vehicleId)
+        .get();
+
+    for (var doc in querySnapshot.docs) {
+      // Delete notification
+      await doc.reference.delete();
+    }
+  } catch (e) {
+    print("Error deleting notification: $e");
+  }
+}
+
+

@@ -343,6 +343,7 @@ Future<void> createNotification(String vehicleId) async {
     // Create notification data with customer name
     await FirebaseFirestore.instance.collection('notifications').add({
       'userId': userId,
+      'vehicleId': vehicleId,
       'message':
           '$customerName has selected an offer for $model with Id $vehicleId insurance request',
       'type': 'offer_selected',

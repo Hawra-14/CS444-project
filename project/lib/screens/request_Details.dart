@@ -86,6 +86,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
           'status': 'offers_sent',
           'adminResponse': {'offerOptions': offers}
         });
+        deleteNotification(widget.vehicleId);
         _showStyledSnackbar(context, 'Request approved and offers sent.',
             isError: false);
       }
@@ -294,3 +295,22 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
   }
 }
 
+Future<void> deleteNotification(String vehicleId) async {
+  try {
+    // Fetch the notification related to the vehicleId and user
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('notifications')
+        .where('vehicleId', isEqualTo: vehicleId)
+        .get();
+
+    for (var doc in querySnapshot.docs) {
+      await doc.reference.delete();
+    }
+  } catch (e) {
+    print("Error deleting notification: $e");
+  }
+}
+
+String containsVehicleId(String vehicleId) {
+  return "$vehicleId";
+}

@@ -185,6 +185,7 @@ class PaymentDetailsPage extends StatelessWidget {
                               expiryDate),
                         });
                         await requestRef.delete();
+                        deleteNotification(vehicleId);
                         _showStyledSnackbar(
                           context,
                           'Request approved and policy created.',
@@ -263,4 +264,25 @@ class PaymentDetailsPage extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> deleteNotification(String vehicleId) async {
+  try {
+    // Fetch the notification related to the vehicleId and user
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('notifications')
+        .where('vehicleId', isEqualTo: vehicleId)
+        .get();
+
+    for (var doc in querySnapshot.docs) {
+      // Delete notification
+      await doc.reference.delete();
+    }
+  } catch (e) {
+    print("Error deleting notification: $e");
+  }
+}
+
+String containsVehicleId(String vehicleId) {
+  return "$vehicleId";
 }
