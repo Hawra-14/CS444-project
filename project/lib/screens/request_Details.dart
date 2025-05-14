@@ -63,24 +63,17 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
   }
 
   Future<void> _handleDecision(
-      bool approve, double priceWhenNew, int year) async {
+      bool approve, double estimatedPrice, int year) async {
     setState(() => _isProcessing = true);
     final ref = FirebaseFirestore.instance
         .collection('insurance_requests')
         .doc(widget.requestId);
-    final int diff = DateTime.now().year - year;
-    double renewalBase = priceWhenNew;
-
-    for (int i = 0; i < diff; i++) {
-      renewalBase *= 0.9;
-    }
-
     try {
       if (approve) {
         List<Map<String, dynamic>> offers = [
-          {'price': (renewalBase * 0.6).round(), 'validity': 6},
-          {'price': renewalBase.round(), 'validity': 12},
-          {'price': (renewalBase * 1.4).round(), 'validity': 18},
+          {'price': (estimatedPrice * 0.6).round(), 'validity': 6},
+          {'price': estimatedPrice.round(), 'validity': 12},
+          {'price': (estimatedPrice * 1.4).round(), 'validity': 18},
         ];
         await ref.update({
           'status': 'offers_sent',
@@ -137,6 +130,9 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
           final price = (data['priceWhenNew'] is num)
               ? (data['priceWhenNew'] as num).toDouble()
               : double.tryParse(data['priceWhenNew'].toString()) ?? 0.0;
+          final estimatedPrice = (data['currentEstimatedPrice'] is num)
+              ? (data['currentEstimatedPrice'] as num).toDouble()
+              : double.tryParse(data['currentEstimatedPrice'].toString()) ?? 0.0;    
           final year =
               int.tryParse(data['manufacturingYear']?.toString() ?? '') ?? 0;
           final passengers = data['numPassengers']?.toString() ?? 'N/A';
@@ -196,7 +192,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                                     fontWeight: FontWeight.w600)),
                         onPressed: _isProcessing
                             ? null
-                            : () => _handleDecision(true, price, year),
+                            : () => _handleDecision(true, estimatedPrice, year),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4F46E5),
                           foregroundColor: Colors.white,

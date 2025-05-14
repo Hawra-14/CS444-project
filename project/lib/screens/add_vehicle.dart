@@ -110,9 +110,10 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
 
       double estimatedPrice = priceWhenNew;
       for (int i = 0; i < age; i++) {
-        estimatedPrice -= estimatedPrice * 0.1;
+        estimatedPrice -= priceWhenNew * 0.1;
       }
       estimatedPrice = estimatedPrice < 0 ? 0 : estimatedPrice;
+      int finalPrice = estimatedPrice.round();
 
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -127,7 +128,7 @@ class _VehicleFormScreenState extends State<VehicleFormScreen> {
           'numPassengers': int.tryParse(_passengerCountController.text) ?? 0,
           'driverAge': int.tryParse(_driverAgeController.text) ?? 0,
           'priceWhenNew': priceWhenNew,
-          'currentEstimatedPrice': estimatedPrice,
+          'currentEstimatedPrice': finalPrice,
           'hasAccidentBefore': false,
           'photos': imageUrls,
           'isInsured': false,

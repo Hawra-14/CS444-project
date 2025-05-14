@@ -26,23 +26,66 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
   }
 
   Future<void> _fetchInsuranceRequest() async {
-    final snapshot = await FirebaseFirestore.instance
+    final requestSnapshot = await FirebaseFirestore.instance
         .collection('insurance_requests')
         .where('vehicleId', isEqualTo: widget.vehicleId)
         .limit(1)
         .get();
 
-    if (snapshot.docs.isNotEmpty) {
-      final doc = snapshot.docs.first;
-      requestDocId = doc.id;
-
-      final List<dynamic>? options =
-          doc.data()['adminResponse']?['offerOptions'];
-      if (options != null) {
-        offers = options.whereType<Map<String, dynamic>>().toList();
-      }
+    if (requestSnapshot.docs.isEmpty) {
+      setState(() => isLoading = false);
+      return;
     }
 
+    final doc = requestSnapshot.docs.first;
+    requestDocId = doc.id;
+    final requestData = doc.data();
+    final List<dynamic>? options =
+        requestData['adminResponse']?['offerOptions'];
+
+    // Fetch vehicle data
+    final vehicleSnapshot = await FirebaseFirestore.instance
+        .collection('vehicles')
+        .doc(widget.vehicleId)
+        .get();
+
+    final vehicleData = vehicleSnapshot.data();
+    final estimatedPrice = double.tryParse(vehicleData?['currentEstimatedPrice'])?? 0;
+
+    if (options == null || estimatedPrice == 0) {
+      setState(() => isLoading = false);
+      return;
+    }
+   
+    final updatedOffers = <Map<String, dynamic>>[];
+    bool needsUpdate = false;
+
+    final newOfferPrices = [
+      (estimatedPrice * 0.6).round(),
+      estimatedPrice,
+      (estimatedPrice * 1.4).round()
+    ];
+
+    for (int i = 0; i < options.length && i < newOfferPrices.length; i++) {
+      final offer = Map<String, dynamic>.from(options[i]);
+      final newPrice = newOfferPrices[i];
+      if ((offer['price'] as num).round() != newPrice) {
+        offer['price'] = newPrice;
+        needsUpdate = true;
+      }
+      updatedOffers.add(offer);
+    }
+
+    if (needsUpdate) {
+      await FirebaseFirestore.instance
+          .collection('insurance_requests')
+          .doc(requestDocId)
+          .update({
+        'adminResponse.offerOptions': updatedOffers,
+      });
+    }
+
+    offers = updatedOffers;
     setState(() => isLoading = false);
   }
 
@@ -50,7 +93,8 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
     if (selectedIndex == null ||
         requestDocId == null ||
         adjustedPrice == null) {
-      _showStyledSnackbar(context, 'Please select and adjust an offer', isError: true);
+      _showStyledSnackbar(context, 'Please select and adjust an offer',
+          isError: true);
       return;
     }
 
@@ -68,7 +112,8 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
     });
     createNotification(widget.vehicleId);
 
-    _showStyledSnackbar(context, 'Offer submitted successfully', isError: false);
+    _showStyledSnackbar(context, 'Offer submitted successfully',
+        isError: false);
     Navigator.pop(context);
   }
 
@@ -354,4 +399,3 @@ Future<void> createNotification(String vehicleId) async {
     print("Error creating notification: $e");
   }
 }
-
