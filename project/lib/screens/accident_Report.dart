@@ -170,10 +170,12 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         final cost = double.tryParse(value ?? '');
-                        if (value == null || value.isEmpty)
+                        if (value == null || value.isEmpty) {
                           return '*Repair cost required';
-                        if (cost == null || cost <= 0)
+                        }
+                        if (cost == null || cost <= 0) {
                           return '*Invalid repair cost';
+                        }
                         return null;
                       },
                     ),
@@ -259,7 +261,7 @@ class _AccidentReportScreenState extends State<AccidentReportScreen> {
     }
 
     final carValue = vehicleDoc['currentEstimatedPrice'];
-    final escalatedConsumptionRate = repairCost > carValue * 0.4 ? 0.15 : 0.10;
+    final escalatedConsumptionRate = repairCost > double.tryParse(carValue)! * 0.4 ? 0.15 : 0.10;
 
     try {
       await FirebaseFirestore.instance.collection('accidents').add({
