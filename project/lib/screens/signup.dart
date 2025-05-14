@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:project/auth_services.dart';
+import 'package:project/screens/auth_services.dart';
 import 'package:project/screens/customer_home.dart';
 
 class SignupScreen extends StatefulWidget {

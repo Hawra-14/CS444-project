@@ -50,13 +50,16 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
         .get();
 
     final vehicleData = vehicleSnapshot.data();
-    final estimatedPrice = double.tryParse(vehicleData?['currentEstimatedPrice'])?? 0;
+    final dynamic rawPrice = vehicleData?['currentEstimatedPrice'];
+    final estimatedPrice = rawPrice is String
+        ? double.tryParse(rawPrice) ?? 0
+        : (rawPrice is num ? rawPrice.toDouble() : 0);
 
     if (options == null || estimatedPrice == 0) {
       setState(() => isLoading = false);
       return;
     }
-   
+
     final updatedOffers = <Map<String, dynamic>>[];
     bool needsUpdate = false;
 
