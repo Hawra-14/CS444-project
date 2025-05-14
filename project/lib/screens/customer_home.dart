@@ -642,7 +642,7 @@ Future<void> createNotification2(String vehicleId) async {
       'vehicleId': vehicleId,
       'message':
           '$customerName has payed for $model with Id $vehicleId insurance request',
-      'type': 'insurance_request',
+      'type': 'payment_done',
       'isRead': false,
       'timestamp': Timestamp.now(),
     });
