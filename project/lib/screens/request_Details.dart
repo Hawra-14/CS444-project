@@ -78,9 +78,9 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
     try {
       if (approve) {
         List<Map<String, dynamic>> offers = [
-          {'price': (renewalBase * 0.6).round(), 'validity': '6 months'},
-          {'price': renewalBase.round(), 'validity': '12 months'},
-          {'price': (renewalBase * 1.4).round(), 'validity': '18 months'},
+          {'price': (renewalBase * 0.6).round(), 'validity': 6},
+          {'price': renewalBase.round(), 'validity': 12},
+          {'price': (renewalBase * 1.4).round(), 'validity': 18},
         ];
         await ref.update({
           'status': 'offers_sent',
@@ -144,6 +144,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
 
           final status = widget.requestData['status'] ?? 'N/A';
           final userId = widget.requestData['userId'] ?? 'N/A';
+          final requestType = widget.requestData['requestType'] ?? 'N/A';
 
           return Padding(
             padding: const EdgeInsets.all(16),
@@ -167,6 +168,7 @@ class _RequestDetailsPageState extends State<RequestDetailsPage> {
                       _buildCard('Request Information', [
                         _buildInfoRow('Request ID', widget.requestId),
                         _buildInfoRow('User ID', userId),
+                        _buildInfoRow('Request Type', requestType),
                         _buildInfoRow('Status', status,
                             textColor: _getStatusColor(status), isBold: true),
                       ]),

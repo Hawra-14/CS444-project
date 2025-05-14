@@ -20,7 +20,6 @@ class CustomerHomeScreen extends StatefulWidget {
 class _CustomerHomePageState extends State<CustomerHomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -175,6 +174,12 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                       passengers.contains(_searchQuery);
                 }).toList();
 
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  for (var doc in filteredVehicles) {
+                    checkAndUpdateInsuranceStatus(doc.id);
+                  }
+                });
+
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -261,42 +266,41 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                 final request =
                                     insuranceSnapshot.data!.docs.first;
                                 status = request['status'];
-                                if (status == 'approved') {
-                                  buttonText = 'Insured';
-                                  backgroundColor = Colors.green.shade100;
-                                  textColor = Colors.green.shade700;
-                                  isButtonDisabled = false;
+
+                                if (status!.contains('_')) {
+                                  var parts = status.split('_');
+                                  parts[0] = parts[0][0].toUpperCase() +
+                                      parts[0].substring(1);
+                                  parts[1] = parts[1][0].toUpperCase() +
+                                      parts[1].substring(1);
+                                  buttonText = parts.join(' ');
                                 } else {
-                                  if (status!.contains('_')) {
-                                    var parts = status.split('_');
-                                    parts[0] = parts[0][0].toUpperCase() +
-                                        parts[0].substring(1);
-                                    parts[1] = parts[1][0].toUpperCase() +
-                                        parts[1].substring(1);
-                                    buttonText = parts.join(' ');
-                                  } else {
-                                    buttonText = status[0].toUpperCase() +
-                                        status.substring(1);
-                                  }
-                                  if (status == 'offer_selected' ||
-                                      status == 'approved' ||
-                                      status == 'payment_done' ||
-                                      status == 'pending') {
-                                    isButtonDisabled = true;
-                                  }
-                                  if (status != 'rejected') {
-                                    backgroundColor = Colors.blue.shade100;
-                                    textColor = Colors.blue.shade700;
-                                  } else {
-                                    backgroundColor = Colors.red.shade100;
-                                    textColor = Colors.red.shade700;
-                                    isButtonDisabled = false;
-                                  }
+                                  buttonText = status[0].toUpperCase() +
+                                      status.substring(1);
+                                }
+                                if (status == 'offer_selected' ||
+                                    status == 'payment_done' ||
+                                    status == 'pending') {
+                                  isButtonDisabled = true;
+                                }
+                                if (status != 'rejected') {
+                                  backgroundColor = Colors.blue.shade100;
+                                  textColor = Colors.blue.shade700;
+                                } else {
+                                  backgroundColor = Colors.red.shade100;
+                                  textColor = Colors.red.shade700;
+                                  isButtonDisabled = false;
                                 }
                               } else {
-                                buttonText = 'Not Insured';
-                                backgroundColor = Colors.red.shade100;
-                                textColor = Colors.red.shade700;
+                                final isInsured = vehicle['isInsured'];
+                                buttonText =
+                                    isInsured ? 'Insured' : 'Not Insured';
+                                backgroundColor = isInsured
+                                    ? Colors.green.shade100
+                                    : Colors.red.shade100;
+                                textColor = isInsured
+                                    ? Colors.green.shade700
+                                    : Colors.red.shade700;
                                 isButtonDisabled = false;
                               }
 
@@ -448,7 +452,6 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                         'status': 'pending',
                         'adminResponse': {
                           'offerOptions': [],
-                          'validityPeriod': null,
                         },
                         'selectedOffer': null,
                         'paymentConfirmed': false,
@@ -525,4 +528,31 @@ void _showStyledSnackbar(
       duration: const Duration(seconds: 3),
     ),
   );
+}
+
+Future<void> checkAndUpdateInsuranceStatus(String vehicleId) async {
+  try {
+    final firestore = FirebaseFirestore.instance;
+    final now = DateTime.now();
+    final policySnapshot = await firestore
+        .collection('insurance_policies')
+        .where('vehicleId', isEqualTo: vehicleId)
+        .where('isCurrent', isEqualTo: true)
+        .limit(1)
+        .get();
+
+    if (policySnapshot.docs.isEmpty) return;
+    final policyDoc = policySnapshot.docs.first;
+    final expiryDate = (policyDoc['expiryDate'] as Timestamp).toDate();
+    if (expiryDate.isBefore(now)) {
+      await policyDoc.reference.update({'isCurrent': false});
+      await firestore.collection('vehicles').doc(vehicleId).update({
+        'isInsured': false,
+      });
+
+      print('Policy expired. Status updated for vehicle $vehicleId');
+    }
+  } catch (e) {
+    print('Error checking policy expiry: $e');
+  }
 }

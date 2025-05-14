@@ -144,7 +144,7 @@ class _OfferSelectionDetailsPageState extends State<OfferSelectionDetailsPage> {
                       _sectionCard('Customer Selection', [
                         _infoRow(
                             'Selected Price', '${offer['price'] ?? 'N/A'} BHD'),
-                        _infoRow('Validity', offer['validity']),
+                        _infoRow('Validity', '${offer['validity'] ?? 'N/A'} Months'),
                       ]),
                     ],
                   ),
@@ -307,7 +307,7 @@ class _OfferSelectionDetailsPageState extends State<OfferSelectionDetailsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _infoRow('Price', '${offer['price']} BHD'),
-              _infoRow('Validity', offer['validity']),
+              _infoRow('Validity', '${offer['validity'] ?? 'N/A'} Months'),
             ],
           ),
         );

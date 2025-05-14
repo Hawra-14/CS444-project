@@ -183,7 +183,7 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
                                   ),
                                 ),
                                 subtitle: Text(
-                                  'Validity: ${offer['validity']}',
+                                  'Validity: ${offer['validity'] ?? 'N/A'} Months',
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
                                     color: Colors.grey.shade700,

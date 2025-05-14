@@ -120,73 +120,82 @@ class PaymentDetailsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.check_circle_outline,
-                      color: Colors.white),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  label: Text(
-                    "Approve & Mark as Insured",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                    icon: const Icon(Icons.check_circle_outline,
+                        color: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      minimumSize: const Size.fromHeight(50),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
-                  ),
-                  onPressed: () async {
-                    try {
-                      final vehicleRef = FirebaseFirestore.instance
-                          .collection('vehicles')
-                          .doc(vehicleId);
-                      final requestRef = FirebaseFirestore.instance
-                          .collection('insurance_requests')
-                          .doc(requestId);
-                      final policiesRef = FirebaseFirestore.instance
-                          .collection('insurance_policies');
+                    label: Text(
+                      "Approve & Mark as Insured",
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    onPressed: () async {
+                      try {
+                        final vehicleRef = FirebaseFirestore.instance
+                            .collection('vehicles')
+                            .doc(vehicleId);
+                        final requestRef = FirebaseFirestore.instance
+                            .collection('insurance_requests')
+                            .doc(requestId);
+                        final policiesRef = FirebaseFirestore.instance
+                            .collection('insurance_policies');
 
-                      final vehicleSnapshot = await vehicleRef.get();
-                      final vehicleData =
-                          vehicleSnapshot.data() as Map<String, dynamic>;
-                      final now = DateTime.now();
+                        final vehicleSnapshot = await vehicleRef.get();
+                        final vehicleData =
+                            vehicleSnapshot.data() as Map<String, dynamic>;
 
-                      await vehicleRef.update({'isInsured': true});
-                      await requestRef.update({
-                        'status': 'approved',
-                        'paymentConfirmed': true,
-                      });
+                        // Get validity period from the request
+                        final int validityMonths =
+                            (requestData['selectedOffer']?['validity'] ?? 12)
+                                .toInt();
+                        final now = DateTime.now();
+                        final expiryDate = DateTime(
+                            now.year, now.month + validityMonths, now.day);
 
-                      final currentPolicies = await policiesRef
-                          .where('vehicleId', isEqualTo: vehicleId)
-                          .where('isCurrent', isEqualTo: true)
-                          .get();
+                        await vehicleRef.update({'isInsured': true});
 
-                      for (var doc in currentPolicies.docs) {
-                        if (doc.exists && doc.id != requestRef.id) {
+                        // Invalidate old active policies
+                        final currentPolicies = await policiesRef
+                            .where('vehicleId', isEqualTo: vehicleId)
+                            .where('isCurrent', isEqualTo: true)
+                            .get();
+
+                        for (var doc in currentPolicies.docs) {
                           await doc.reference.update({'isCurrent': false});
                         }
+
+                        // Create new policy
+                        await policiesRef.add({
+                          'vehicleId': vehicleId,
+                          'registrationNumber':
+                              vehicleData['registrationNumber'],
+                          'model': vehicleData['model'],
+                          'policyValue': requestData['selectedOffer']['price'],
+                          'year': now.year,
+                          'isCurrent': true,
+                          'createdAt': Timestamp.fromDate(now),
+                          'expiryDate': Timestamp.fromDate(
+                              expiryDate),
+                        });
+                        await requestRef.delete();
+                        _showStyledSnackbar(
+                          context,
+                          'Request approved and policy created.',
+                          isError: false,
+                        );
+                        Navigator.of(context).pop();
+                      } catch (e) {
+                        _showStyledSnackbar(context, 'Error: $e',
+                            isError: true);
                       }
-
-                      await policiesRef.add({
-                        'vehicleId': vehicleId,
-                        'registrationNumber': vehicleData['registrationNumber'],
-                        'model': vehicleData['model'],
-                        'policyValue': requestData['selectedOffer']['price'],
-                        'year': now.year,
-                        'isCurrent': true,
-                        'createdAt': Timestamp.now(),
-                      });
-
-                      _showStyledSnackbar(
-                          context, 'Request approved and policy created.', isError: false);
-                      Navigator.of(context).pop();
-                    } catch (e) {
-                      _showStyledSnackbar(context, 'Error: $e', isError: true);
-                    }
-                  },
-                ),
+                    }),
               ],
             ),
           );
