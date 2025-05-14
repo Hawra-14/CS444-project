@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,10 +22,11 @@ class _InsurancePolicyReportPageState extends State<InsurancePolicyReportPage> {
 
   // Stream that fetches and filters insurance policies
   Stream<List<QueryDocumentSnapshot>> _buildPolicyStream() async* {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
     // Fetch all policies from the collection
     final querySnapshot = await FirebaseFirestore.instance
         .collection('insurance_policies')
-        .orderBy('year', descending: true)
+        .where('userId', isEqualTo: userId)
         .get();
 
     List<QueryDocumentSnapshot> allDocs = querySnapshot.docs;

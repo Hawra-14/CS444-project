@@ -173,6 +173,7 @@ class PaymentDetailsPage extends StatelessWidget {
 
                         // Create new policy
                         await policiesRef.add({
+                          'userId': vehicleData['userId'],
                           'vehicleId': vehicleId,
                           'registrationNumber':
                               vehicleData['registrationNumber'],
