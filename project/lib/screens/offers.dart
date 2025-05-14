@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -65,6 +66,7 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
       'selectedOffer': selectedOffer,
       'status': 'offer_selected',
     });
+    createNotification(widget.vehicleId);
 
     _showStyledSnackbar(context, 'Offer submitted successfully', isError: false);
     Navigator.pop(context);
@@ -306,3 +308,49 @@ class _OfferSelectionPageState extends State<OfferSelectionPage> {
     );
   }
 }
+
+Future<void> createNotification(String vehicleId) async {
+  try {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    final userSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    if (!userSnapshot.exists) {
+      return;
+    }
+
+    final userData = userSnapshot.data() as Map<String, dynamic>;
+    final customerName = userData['name'];
+
+    if (customerName == null || customerName.isEmpty) {
+      return;
+    }
+
+    final vehicleSnapshot = await FirebaseFirestore.instance
+        .collection('vehicles')
+        .doc(vehicleId)
+        .get();
+    if (!vehicleSnapshot.exists) {
+      return;
+    }
+
+    final vehicleData = vehicleSnapshot.data() as Map<String, dynamic>;
+    final model = vehicleData['model'];
+
+    if (model == null || model.isEmpty) {
+      return;
+    }
+
+    // Create notification data with customer name
+    await FirebaseFirestore.instance.collection('notifications').add({
+      'userId': userId,
+      'message':
+          '$customerName has selected an offer for $model with Id $vehicleId insurance request',
+      'type': 'offer_selected',
+      'isRead': false,
+      'timestamp': Timestamp.now(),
+    });
+  } catch (e) {
+    print("Error creating notification: $e");
+  }
+}
+

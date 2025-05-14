@@ -337,8 +337,9 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                                               'status': 'payment_done'
                                             }).then((_) {
                                               _showStyledSnackbar(context,
-                                                  'Payment confirmed successfully!',
+                                                  'Payment done successfully!',
                                                   isError: false);
+                                              createNotification2(vehicle.id);
                                               setState(() {});
                                             }).catchError((error) {
                                               _showStyledSnackbar(context,
@@ -459,6 +460,8 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
 
                       await insuranceRequestRef.set(requestData);
 
+                      createNotification(vehicleId);
+
                       if (hasAccident) {
                         final vehicleRef = FirebaseFirestore.instance
                             .collection('vehicles')
@@ -467,11 +470,10 @@ class _CustomerHomePageState extends State<CustomerHomeScreen> {
                           'hasAccidentBefore': true,
                         });
                       }
-
-                      Navigator.of(context).pop();
                       _showStyledSnackbar(
                           context, 'Insurance request submitted!',
                           isError: false);
+                      Navigator.of(context).pop();
                       setState(() {});
                     } catch (e) {
                       _showStyledSnackbar(
@@ -554,5 +556,95 @@ Future<void> checkAndUpdateInsuranceStatus(String vehicleId) async {
     }
   } catch (e) {
     print('Error checking policy expiry: $e');
+  }
+}
+
+Future<void> createNotification(String vehicleId) async {
+  try {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    final userSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    if (!userSnapshot.exists) {
+      return;
+    }
+
+    final userData = userSnapshot.data() as Map<String, dynamic>;
+    final customerName = userData['name'];
+
+    if (customerName == null || customerName.isEmpty) {
+      return;
+    }
+
+    final vehicleSnapshot = await FirebaseFirestore.instance
+        .collection('vehicles')
+        .doc(vehicleId)
+        .get();
+    if (!vehicleSnapshot.exists) {
+      return;
+    }
+
+    final vehicleData = vehicleSnapshot.data() as Map<String, dynamic>;
+    final model = vehicleData['model'];
+
+    if (model == null || model.isEmpty) {
+      return;
+    }
+
+    // Create notification data with customer name
+    await FirebaseFirestore.instance.collection('notifications').add({
+      'userId': userId,
+      'message':
+          '$customerName has submitted an insurance request for $model with Id $vehicleId',
+      'type': 'insurance_request',
+      'isRead': false,
+      'timestamp': Timestamp.now(),
+    });
+  } catch (e) {
+    print("Error creating notification: $e");
+  }
+}
+
+Future<void> createNotification2(String vehicleId) async {
+  try {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+    final userSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    if (!userSnapshot.exists) {
+      return;
+    }
+
+    final userData = userSnapshot.data() as Map<String, dynamic>;
+    final customerName = userData['name'];
+
+    if (customerName == null || customerName.isEmpty) {
+      return;
+    }
+
+    final vehicleSnapshot = await FirebaseFirestore.instance
+        .collection('vehicles')
+        .doc(vehicleId)
+        .get();
+    if (!vehicleSnapshot.exists) {
+      return;
+    }
+
+    final vehicleData = vehicleSnapshot.data() as Map<String, dynamic>;
+    final model = vehicleData['model'];
+
+    if (model == null || model.isEmpty) {
+      return;
+    }
+
+    // Create notification data with customer name
+    await FirebaseFirestore.instance.collection('notifications').add({
+      'userId': userId,
+      'message':
+          '$customerName has payed for $model with Id $vehicleId insurance request',
+      'type': 'insurance_request',
+      'isRead': false,
+      'timestamp': Timestamp.now(),
+    });
+  } catch (e) {
+    print("Error creating notification: $e");
   }
 }

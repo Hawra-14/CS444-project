@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:project/screens/notifications.dart';
 import 'package:project/screens/offer_selection_details.dart';
 import 'package:project/screens/payment_details.dart';
 import 'package:project/screens/request_Details.dart';
@@ -28,6 +29,17 @@ class AdminHomeScreen extends StatelessWidget {
               color: Colors.black87,
             ),
           ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.notifications),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => NotificationPage()),
+                );
+              },
+            )
+          ],
           bottom: const TabBar(
             labelColor: Color(0xFF4F46E5),
             unselectedLabelColor: Colors.black54,
